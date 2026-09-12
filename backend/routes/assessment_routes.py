@@ -19,7 +19,7 @@ def assignments_page(request):
         "assignments.html",
         course_title=_course_title(course),
         course_id=str(course_id),
-        rows=_assignment_rows_html(rows),
+        rows=_assignment_rows_html(rows, course_id),
         marks_tables=_assignment_marks_tables_html(course_id, rows),
     )
     return Response.html(
@@ -72,7 +72,7 @@ def exams_page(request):
         "exams.html",
         course_title=_course_title(course),
         course_id=str(course_id),
-        rows=_exam_rows_html(rows),
+        rows=_exam_rows_html(rows, course_id),
         marks_tables=_exam_marks_tables_html(course_id, rows),
     )
     return Response.html(
@@ -127,7 +127,7 @@ def _owned_course(request, course_id):
 
 
 def _course_title(course):
-    return f"{course['course_code']} — {course['course_name']}"
+    return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
 def _parse_marks(request, course_id, max_marks):
@@ -153,7 +153,7 @@ def _parse_marks(request, course_id, max_marks):
     return parsed
 
 
-def _assignment_rows_html(rows):
+def _assignment_rows_html(rows, course_id):
     if not rows:
         return '<tr><td colspan="5" class="empty">No assignments yet.</td></tr>'
     out = []
@@ -166,13 +166,16 @@ def _assignment_rows_html(rows):
             f"<td>{template.esc(a['due_date'] or '—')}</td>"
             f"<td class=\"actions\">"
             f"<a class=\"btn btn-small\" href=\"#marks-{a['id']}\">Enter marks</a> "
+            f"<form class=\"inline\" method=\"post\" "
+            f"action=\"/courses/{course_id}/assignments/{a['id']}/delete\">"
+            "<button class=\"btn btn-small btn-danger\" type=\"submit\">Delete</button></form>"
             f"</td>"
             "</tr>"
         )
     return "".join(out)
 
 
-def _exam_rows_html(rows):
+def _exam_rows_html(rows, course_id):
     if not rows:
         return '<tr><td colspan="4" class="empty">No exams yet.</td></tr>'
     out = []
@@ -183,7 +186,10 @@ def _exam_rows_html(rows):
             f"<td>{x['max_marks']:g}</td>"
             f"<td>{template.esc(x['exam_date'] or '—')}</td>"
             f"<td class=\"actions\">"
-            f"<a class=\"btn btn-small\" href=\"#marks-{x['id']}\">Enter marks</a>"
+            f"<a class=\"btn btn-small\" href=\"#marks-{x['id']}\">Enter marks</a> "
+            f"<form class=\"inline\" method=\"post\" "
+            f"action=\"/courses/{course_id}/exams/{x['id']}/delete\">"
+            "<button class=\"btn btn-small btn-danger\" type=\"submit\">Delete</button></form>"
             f"</td></tr>"
         )
     return "".join(out)

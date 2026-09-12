@@ -23,8 +23,8 @@ def student_list(request):
     )
     body = template.render(
         "students.html",
-        rows=_student_rows_html(rows, request),
-        q=query,
+        rows=_student_rows_html(rows),
+        q=template.esc(query),
         course_options=_course_options(request),
         section_options=_section_options(section_id),
     )
@@ -43,7 +43,7 @@ def student_new_form(request):
         dob_value="",
         contact_value="",
         enrolled_value="",
-        section_options=_section_options(""),
+        section_options=_section_choices(""),
         cancel_link="/students",
     )
     return Response.html(template.page(request, "Add Student", body, active="students"))
@@ -66,14 +66,18 @@ def student_detail(request):
     student = students.get(student_id)
     if student is None:
         return _not_found(request)
+    can_edit = students.can_edit(student_id, request.user["id"])
     body = template.render(
         "student_detail.html",
-        student=_detail_rows(student),
-        courses=_enrolled_courses_html(student_id, request),
-        can_edit="yes" if students.can_edit(student_id, request.user["id"]) else "",
+        student_rows=_detail_rows(student),
+        courses_html=_enrolled_courses_html(student_id),
+        edit_link=f"<a class=\"btn\" href=\"/students/{student_id}/edit\">Edit</a>" if can_edit else "",
+        delete_form=_delete_form_html(student_id, student["name"]) if can_edit else "",
+        no_edit_note="" if can_edit else
+        '<p class="hint">You can view this student, but only professors of their courses can edit them.</p>',
         back_link="/students",
     )
-    return Response.html(template.page(request, student["name"], body, active="students"))
+    return Response.html(template.page(request, template.esc(student["name"]), body, active="students"))
 
 
 @route("GET", r"/students/(?P<student_id>\d+)/edit")
@@ -88,12 +92,12 @@ def student_edit_form(request):
         "student_form.html",
         form_title="Edit Student",
         action=f"/students/{student_id}/edit",
-        name_value=student["name"],
-        roll_value=student["roll_number"],
-        dob_value=student["date_of_birth"] or "",
-        contact_value=student["contact"] or "",
-        enrolled_value=student["enrollment_date"],
-        section_options=_section_options(str(student["section_id"])),
+        name_value=template.esc(student["name"]),
+        roll_value=template.esc(student["roll_number"]),
+        dob_value=template.esc(student["date_of_birth"] or ""),
+        contact_value=template.esc(student["contact"] or ""),
+        enrolled_value=template.esc(student["enrollment_date"]),
+        section_options=_section_choices(str(student["section_id"])),
         cancel_link=f"/students/{student_id}",
     )
     return Response.html(template.page(request, "Edit Student", body, active="students"))
@@ -165,7 +169,7 @@ def _detail_rows(s):
     )
 
 
-def _enrolled_courses_html(student_id, request):
+def _enrolled_courses_html(student_id):
     items = students.enrolled_courses(student_id)
     if not items:
         return '<p class="empty">Not enrolled in any course yet.</p>'
@@ -194,10 +198,30 @@ def _course_options(request):
 
 
 def _section_options(selected=""):
+    """Filter dropdown: includes an 'All sections' entry."""
     options = ['<option value="">All sections</option>']
+    options.append(_section_choices(selected))
+    return "".join(options)
+
+
+def _section_choices(selected=""):
+    """Form dropdown: every section, no 'All' entry."""
+    options = []
     for sec in courses.list_sections():
         sel = " selected" if selected == str(sec["id"]) else ""
         options.append(
             f"<option value=\"{sec['id']}\"{sel}>{template.esc(sec['section_name'])}</option>"
         )
     return "".join(options)
+
+
+def _delete_form_html(student_id, name):
+    """Two-step, JavaScript-free delete confirmation via <details>."""
+    return (
+        "<details class=\"danger-zone\">"
+        "<summary>Delete this student…</summary>"
+        f"<form method=\"post\" action=\"/students/{student_id}/delete\" class=\"inline\">"
+        f"<button type=\"submit\" class=\"btn btn-danger\">Yes, permanently delete {template.esc(name)}</button>"
+        "</form>"
+        "</details>"
+    )

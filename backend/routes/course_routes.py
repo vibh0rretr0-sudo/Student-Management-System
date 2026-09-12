@@ -47,6 +47,7 @@ def course_detail(request):
         enroll_section=_enroll_section_html(course_id, enrollable) if is_owner
             else "<p class='empty'>Only the course owner can manage enrollment.</p>",
         owner_links=_owner_links_html(course_id) if is_owner else "",
+        delete_form=_course_delete_form_html(course, course_id) if is_owner else "",
         back_link="/courses",
     )
     return Response.html(template.page(request, course["course_name"], body, active="courses"))
@@ -58,13 +59,13 @@ def course_edit_form(request):
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
     values = {
-        "name": course["course_name"],
-        "code": course["course_code"],
+        "name": template.esc(course["course_name"]),
+        "code": template.esc(course["course_code"]),
         "section_options": _section_options(str(course["section_id"])),
-        "term": course["term"],
+        "term": template.esc(course["term"]),
         "day_options": _day_options(course["day_of_week"]),
-        "start": course["start_time"][:5],
-        "end": course["end_time"][:5],
+        "start": template.esc(course["start_time"][:5]),
+        "end": template.esc(course["end_time"][:5]),
     }
     body = _course_form(request, form_title="Edit Course",
                         action=f"/courses/{course_id}/edit", values=values,
@@ -271,6 +272,18 @@ def _owner_links_html(course_id):
         f"<a class=\"btn\" href=\"/courses/{course_id}/grades\">Grades (C++)</a> "
         f"<a class=\"btn\" href=\"/courses/{course_id}/rank\">Course rank (C++)</a> "
         f"<a class=\"btn btn-ghost\" href=\"/courses/{course_id}/edit\">Edit course</a>"
+    )
+
+
+def _course_delete_form_html(course, course_id):
+    """Two-step, JavaScript-free delete confirmation via <details>."""
+    return (
+        "<details class=\"danger-zone\">"
+        "<summary>Delete this course…</summary>"
+        f"<form method=\"post\" action=\"/courses/{course_id}/delete\" class=\"inline\">"
+        f"<button type=\"submit\" class=\"btn btn-danger\">Yes, permanently delete {template.esc(course['course_code'])}</button>"
+        "</form>"
+        "</details>"
     )
 
 

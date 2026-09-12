@@ -38,4 +38,5 @@ def logout(request):
 def template_login(request, error):
     from backend.routes import template
 
-    return template.render("login.html", error=error)
+    shown = f'<p class="login-error">{template.esc(error)}</p>' if error else ""
+    return template.render("login.html", error=shown)

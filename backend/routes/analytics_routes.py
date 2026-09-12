@@ -26,7 +26,7 @@ def course_grades(request):
         "grades.html",
         course_title=_course_title(course),
         rows=_grade_rows_html(rows),
-        engine_note=engine_note,
+        engine_note=template.esc(engine_note),
         back_link=f"/courses/{course_id}",
     )
     return Response.html(
@@ -59,7 +59,7 @@ def rankings(request):
     body = template.render(
         "rankings.html",
         rows=_rank_rows_html(rows),
-        engine_note=engine_note,
+        engine_note=template.esc(engine_note),
     )
     return Response.html(template.page(request, "Rankings", body, active="rankings"))
 
@@ -74,7 +74,7 @@ def _visible_course(request, course_id):
 
 
 def _course_title(course):
-    return f"{course['course_code']} — {course['course_name']}"
+    return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
 def _grade_rows_html(rows):

@@ -31,7 +31,7 @@ def attendance_page(request):
         date=str(date),
         rows=_marking_rows_html(rows),
         summary=_summary_html(engine_rows),
-        engine_note=engine_note if engine_rows is None else "",
+        engine_note=template.esc(engine_note) if engine_rows is None else "",
         dates=_date_links(course_id, attendance.dates(course_id)),
         back_link=f"/courses/{course_id}",
     )
@@ -79,7 +79,7 @@ def _owned_course(request, course_id):
 
 
 def _course_title(course):
-    return f"{course['course_code']} — {course['course_name']}"
+    return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
 def _marking_rows_html(rows):

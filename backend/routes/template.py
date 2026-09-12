@@ -18,11 +18,17 @@ def esc(value):
 
 
 def render(name, **variables):
-    """Render a template file by substituting {{key}} placeholders."""
+    """Render a template file by substituting {{key}} placeholders.
+
+    Contract: every value must already be safe HTML. Call sites either
+    pass a fragment they built with esc() around user data, or pass a
+    value they esc()'d directly. render() never escapes on its own so
+    that pre-built fragments (tables, charts, option lists) work.
+    """
     path = Path(config.TEMPLATE_DIR) / name
     text = path.read_text(encoding="utf-8")
     for key, value in variables.items():
-        text = text.replace("{{" + key + "}}", esc(value))
+        text = text.replace("{{" + key + "}}", str(value))
     return text
 
 

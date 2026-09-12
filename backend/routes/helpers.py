@@ -88,8 +88,8 @@ def _error_page(request, status, title, message):
         body = template.render(
             "error.html",
             status=str(status),
-            title=title,
-            message=message,
+            title=template.esc(title),
+            message=template.esc(message),
             back_link="/dashboard" if request.user else "/login",
         )
         return Response.html(body, status=status)
