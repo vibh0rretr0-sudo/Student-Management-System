@@ -21,3 +21,6 @@ Thumbs.db
 desktop.ini
 .vscode/
 .idea/
+
+# --- Freebuff workspace artifacts (thread-local logs/ids) ---
+.freebuff/
