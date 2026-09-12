@@ -714,12 +714,18 @@ button.btn { font-family: inherit; }
   pointer-events: none;
 }
 
-/* ---------- 10. view transitions (progressive; no-op elsewhere) ---------- */
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: fade-out-vt .18s ease both; }
-::view-transition-new(root) { animation: fade-in-vt .26s ease both; }
-@keyframes fade-out-vt { to { opacity: 0; } }
-@keyframes fade-in-vt { from { opacity: 0; } }
+/* ---------- 10. view transitions (progressive; no-op elsewhere) ----------
+   Gated behind reduced-motion:no-preference — cross-fades ARE motion, and
+   software-rendered/headless environments can stall on cross-document
+   transitions (verified via probe: disabling the feature restores instant
+   rendering there; GPU browsers are unaffected). */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root) { animation: fade-out-vt .18s ease both; }
+  ::view-transition-new(root) { animation: fade-in-vt .26s ease both; }
+  @keyframes fade-out-vt { to { opacity: 0; } }
+  @keyframes fade-in-vt { from { opacity: 0; } }
+}
 
 /* ---------- selection + scrollbars ---------- */
 ::selection { background: rgba(200, 30, 60, .30); }

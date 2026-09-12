@@ -204,7 +204,11 @@ highlight, not an image. `pointer-events: none` keeps it non-interactive.
 
 - **Page transitions:** `@view-transition { navigation: auto; }` + old/new
   pseudo-elements fade pages on navigation in Chromium; other browsers ignore
-  it and load instantly (graceful no-op).
+  it and load instantly (graceful no-op). It is gated behind
+  `prefers-reduced-motion: no-preference` because a cross-fade is motion —
+  and because software-rendered/headless environments can stall on
+  cross-document transitions (found by probing headless screenshots; the
+  media gate plus feature detection makes the fallback instant everywhere).
 - **Shimmering badges:** Pass/Fail pills are two stacked background images —
   the badge color plus a moving white `linear-gradient` sheen
   (`background-position` animation, `background-size: 220%`).
