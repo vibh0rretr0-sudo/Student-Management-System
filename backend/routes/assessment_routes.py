@@ -157,9 +157,9 @@ def _assignment_rows_html(rows, course_id):
     if not rows:
         return '<tr><td colspan="5" class="empty">No assignments yet.</td></tr>'
     out = []
-    for a in rows:
+    for i, a in enumerate(rows):
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(a['title'])}</td>"
             f"<td>{template.esc(a['description'] or '—')}</td>"
             f"<td>{a['max_marks']:g}</td>"
@@ -179,9 +179,9 @@ def _exam_rows_html(rows, course_id):
     if not rows:
         return '<tr><td colspan="4" class="empty">No exams yet.</td></tr>'
     out = []
-    for x in rows:
+    for i, x in enumerate(rows):
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(x['title'])}</td>"
             f"<td>{x['max_marks']:g}</td>"
             f"<td>{template.esc(x['exam_date'] or '—')}</td>"
@@ -198,15 +198,15 @@ def _exam_rows_html(rows, course_id):
 def _assignment_marks_tables_html(course_id, assignments):
     """One marks-entry table per assignment."""
     parts = []
-    for a in assignments:
+    for bi, a in enumerate(assignments):
         existing = assessments.get_submissions(a["id"])
         rows = []
-        for s in courses.list_enrolled(course_id):
+        for i, s in enumerate(courses.list_enrolled(course_id)):
             rec = existing.get(s["id"], {})
             marks = rec.get("marks")
             marks_value = "" if marks is None else f"{marks:g}"
             rows.append(
-                "<tr>"
+                f"<tr style=\"--i:{i}\">"
                 f"<td>{template.esc(s['roll_number'])}</td>"
                 f"<td>{template.esc(s['name'])}</td>"
                 f"<td><input type=\"number\" step=\"0.5\" min=\"0\" max=\"{a['max_marks']}\" "
@@ -217,21 +217,21 @@ def _assignment_marks_tables_html(course_id, assignments):
             )
         parts.append(_marks_block(course_id, f"marks-{a['id']}", a["title"], a["max_marks"],
                                   f"/courses/{course_id}/assignments/{a['id']}/marks",
-                                  rows, with_submitted=True))
+                                  rows, with_submitted=True, block_index=bi))
     return "".join(parts)
 
 
 def _exam_marks_tables_html(course_id, exams):
     """One marks-entry table per exam."""
     parts = []
-    for x in exams:
+    for bi, x in enumerate(exams):
         existing = assessments.get_exam_marks(x["id"])
         rows = []
-        for s in courses.list_enrolled(course_id):
+        for i, s in enumerate(courses.list_enrolled(course_id)):
             marks = existing.get(s["id"])
             marks_value = "" if marks is None else f"{marks:g}"
             rows.append(
-                "<tr>"
+                f"<tr style=\"--i:{i}\">"
                 f"<td>{template.esc(s['roll_number'])}</td>"
                 f"<td>{template.esc(s['name'])}</td>"
                 f"<td><input type=\"number\" step=\"0.5\" min=\"0\" max=\"{x['max_marks']}\" "
@@ -240,14 +240,14 @@ def _exam_marks_tables_html(course_id, exams):
             )
         parts.append(_marks_block(course_id, f"marks-{x['id']}", x["title"], x["max_marks"],
                                   f"/courses/{course_id}/exams/{x['id']}/marks",
-                                  rows, with_submitted=False))
+                                  rows, with_submitted=False, block_index=bi))
     return "".join(parts)
 
 
-def _marks_block(course_id, anchor, title, max_marks, action, rows, with_submitted):
+def _marks_block(course_id, anchor, title, max_marks, action, rows, with_submitted, block_index=0):
     head = "<th>Submitted on</th>" if with_submitted else ""
     return (
-        f"<section class=\"marks-block\" id=\"{anchor}\">"
+        f"<section class=\"marks-block\" id=\"{anchor}\" style=\"--i:{block_index}\">"
         f"<h3>{template.esc(title)} <small>(max {max_marks:g})</small></h3>"
         f"<form method=\"post\" action=\"{action}\">"
         "<table class=\"data-table\"><thead><tr><th>Roll</th><th>Student</th><th>Marks</th>"

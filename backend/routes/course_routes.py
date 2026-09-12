@@ -205,10 +205,10 @@ def _course_rows_html(rows):
     if not rows:
         return '<tr><td colspan="6" class="empty">No courses yet — add your first one.</td></tr>'
     out = []
-    for c in rows:
+    for i, c in enumerate(rows):
         slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td><a href=\"/courses/{c['id']}\">{template.esc(c['course_code'])}</a></td>"
             f"<td><a href=\"/courses/{c['id']}\">{template.esc(c['course_name'])}</a></td>"
             f"<td>{template.esc(c['section_name'])}</td>"
@@ -230,8 +230,8 @@ def _course_info_rows(c):
         ("Professor", c["professor_name"]),
     ]
     return "".join(
-        f"<tr><th scope=\"row\">{template.esc(label)}</th><td>{template.esc(value)}</td></tr>"
-        for label, value in rows
+        f"<tr style=\"--i:{i}\"><th scope=\"row\">{template.esc(label)}</th><td>{template.esc(value)}</td></tr>"
+        for i, (label, value) in enumerate(rows)
     )
 
 
@@ -239,7 +239,7 @@ def _enrolled_rows_html(enrolled, course_id, is_owner):
     if not enrolled:
         return '<tr><td colspan="4" class="empty">No students enrolled yet.</td></tr>'
     out = []
-    for s in enrolled:
+    for i, s in enumerate(enrolled):
         manage = ""
         if is_owner:
             manage = (
@@ -248,7 +248,7 @@ def _enrolled_rows_html(enrolled, course_id, is_owner):
                 "<button type=\"submit\" class=\"btn btn-small btn-danger\">Unenroll</button></form>"
             )
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(s['roll_number'])}</td>"
             f"<td><a href=\"/students/{s['id']}\">{template.esc(s['name'])}</a></td>"
             f"<td>{template.esc(s['section_name'])}</td>"

@@ -2,7 +2,7 @@
   <h2>Assignments — {{course_title}}</h2>
 </div>
 
-<section class="card form-card">
+<section class="card form-card" style="--i:0">
   <h3>New assignment</h3>
   <form method="post" action="/courses/{{course_id}}/assignments/new" class="row-form">
     <label class="field"><span>Title</span><input type="text" name="title" required maxlength="100"></label>
@@ -13,7 +13,7 @@
   </form>
 </section>
 
-<section class="card">
+<section class="card" style="--i:1">
   <h3>All assignments</h3>
   <table class="data-table">
     <thead><tr><th>Title</th><th>Description</th><th>Max</th><th>Due</th><th></th></tr></thead>

@@ -132,9 +132,9 @@ def _student_rows_html(rows):
     if not rows:
         return '<tr><td colspan="6" class="empty">No students match.</td></tr>'
     out = []
-    for s in rows:
+    for i, s in enumerate(rows):
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(s['roll_number'])}</td>"
             f"<td><a href=\"/students/{s['id']}\">{template.esc(s['name'])}</a></td>"
             f"<td>{template.esc(s['section_name'])}</td>"
@@ -185,8 +185,8 @@ def _detail_rows(s):
         ("Enrollment date", s["enrollment_date"]),
     ]
     return "".join(
-        f"<tr><th scope=\"row\">{template.esc(label)}</th><td>{template.esc(value)}</td></tr>"
-        for label, value in rows
+        f"<tr style=\"--i:{i}\"><th scope=\"row\">{template.esc(label)}</th><td>{template.esc(value)}</td></tr>"
+        for i, (label, value) in enumerate(rows)
     )
 
 

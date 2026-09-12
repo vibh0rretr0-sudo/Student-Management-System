@@ -86,12 +86,12 @@ def _marking_rows_html(rows):
     if not rows:
         return '<tr><td colspan="4" class="empty">No students enrolled yet.</td></tr>'
     out = []
-    for r in rows:
+    for i, r in enumerate(rows):
         status = r["status"]
         present_checked = "checked" if status == "present" else ""
         absent_checked = "checked" if status == "absent" else ""
         out.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(r['roll_number'])}</td>"
             f"<td>{template.esc(r['name'])}</td>"
             f"<td class=\"status-cell\">"
@@ -110,10 +110,10 @@ def _summary_html(engine_rows):
     if not engine_rows:
         return '<p class="empty">No attendance recorded yet.</p>'
     parts = []
-    for r in engine_rows:
+    for i, r in enumerate(engine_rows):
         badge = "badge pass" if r["eligible"] else "badge fail"
         parts.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(r['roll_number'])}</td>"
             f"<td>{template.esc(r['name'])}</td>"
             f"<td>{r['present']}/{r['sessions']}</td>"

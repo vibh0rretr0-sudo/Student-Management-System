@@ -81,10 +81,10 @@ def _grade_rows_html(rows):
     if not rows:
         return '<tr><td colspan="6" class="empty">No enrolled students.</td></tr>'
     parts = []
-    for r in rows:
+    for i, r in enumerate(rows):
         badge = "badge pass" if r["result"] == "Pass" else "badge fail"
         parts.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td>{template.esc(r['roll_number'])}</td>"
             f"<td><a href=\"/students/{r['student_id']}\">{template.esc(r['name'])}</a></td>"
             f"<td>{r['assign_pct']}%</td>"
@@ -100,10 +100,10 @@ def _rank_rows_html(rows):
     if not rows:
         return '<tr><td colspan="5" class="empty">No ranking data.</td></tr>'
     parts = []
-    for r in rows:
+    for i, r in enumerate(rows):
         medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(r["rank"], str(r["rank"]))
         parts.append(
-            "<tr>"
+            f"<tr style=\"--i:{i}\">"
             f"<td class=\"rank-cell\">{medal}</td>"
             f"<td>{template.esc(r['roll_number'])}</td>"
             f"<td><a href=\"/students/{r['student_id']}\">{template.esc(r['name'])}</a></td>"

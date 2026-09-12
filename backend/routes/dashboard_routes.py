@@ -32,11 +32,11 @@ def dashboard(request):
 def _grade_chart_html(bands):
     max_count = max((b["count"] for b in bands), default=0) or 1
     bars = []
-    for b in bands:
+    for i, b in enumerate(bands):
         width = round(b["count"] / max_count * 100, 1)
         bars.append(
-            f'<div class="bar-row"><span class="bar-label">{template.esc(b["label"])}</span>'
-            f'<div class="bar-track"><div class="bar-fill" style="width:{width}%"></div></div>'
+            f'<div class="bar-row" style="--i:{i}"><span class="bar-label">{template.esc(b["label"])}</span>'
+            f'<div class="bar-track"><div class="bar-fill" style="--w:{width}%"></div></div>'
             f'<span class="bar-value">{b["count"]}</span></div>'
         )
     if all(b["count"] == 0 for b in bands):
@@ -46,18 +46,18 @@ def _grade_chart_html(bands):
 
 def _attendance_chart_html(courses):
     bars = []
-    for c in courses:
+    for i, c in enumerate(courses):
         if c["rate"] is None:
             bars.append(
-                f'<div class="bar-row"><span class="bar-label">{template.esc(c["label"])}</span>'
+                f'<div class="bar-row" style="--i:{i}"><span class="bar-label">{template.esc(c["label"])}</span>'
                 '<div class="bar-track"></div><span class="bar-value">no sessions</span></div>'
             )
             continue
         width = round(c["rate"], 1)
         css_class = "bar-fill warn" if c["rate"] < 75 else "bar-fill"
         bars.append(
-            f'<div class="bar-row"><span class="bar-label">{template.esc(c["label"])}</span>'
-            f'<div class="bar-track"><div class="{css_class}" style="width:{width}%"></div></div>'
+            f'<div class="bar-row" style="--i:{i}"><span class="bar-label">{template.esc(c["label"])}</span>'
+            f'<div class="bar-track threshold"><div class="{css_class}" style="--w:{width}%"></div></div>'
             f'<span class="bar-value">{c["rate"]}%</span></div>'
         )
     if not courses:

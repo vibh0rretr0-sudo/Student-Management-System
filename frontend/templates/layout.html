@@ -7,17 +7,30 @@
   <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="sidebar-brand">JECRC <span>SMS</span></div>
-    <nav class="sidebar-nav">{{nav}}</nav>
-    <div class="sidebar-foot">HTML · CSS · Python · C++ · MySQL</div>
-  </aside>
-  <div class="main">
-    <header class="topbar">
-      <h1 class="topbar-title">{{page_title}}</h1>
-      <span class="topbar-user">{{username}}</span>
-    </header>
-    <main class="content">{{content}}</main>
+  <div class="aurora" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="sidebar-brand">JECRC <span>SMS</span></div>
+      <nav class="sidebar-nav">{{nav}}</nav>
+      <div class="sidebar-foot">HTML · CSS · Python · C++ · MySQL</div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <h1 class="topbar-title">{{page_title}}</h1>
+        <div class="topbar-right">
+          <label class="theme-toggle" title="Toggle dark mode">
+            <input type="checkbox" id="theme-toggle">
+            <span class="toggle-ui"><span class="glyph glyph-sun">☀</span><span class="glyph glyph-moon">☾</span></span>
+          </label>
+          <span class="topbar-user">{{username}}</span>
+        </div>
+      </header>
+      <main class="content">{{content}}</main>
+    </div>
   </div>
 </body>
 </html>

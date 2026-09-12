@@ -1,20 +1,20 @@
 <section class="cards-grid">
-  <div class="stat-card"><span class="stat-value">{{total_students}}</span><span class="stat-label">Students (institute)</span></div>
-  <div class="stat-card"><span class="stat-value">{{my_courses}}</span><span class="stat-label">My courses</span></div>
-  <div class="stat-card"><span class="stat-value">{{my_students}}</span><span class="stat-label">My students</span></div>
-  <div class="stat-card"><span class="stat-value">{{avg_attendance}}%</span><span class="stat-label">Avg attendance (my courses)</span></div>
-  <div class="stat-card"><span class="stat-value">{{avg_grade}}%</span><span class="stat-label">Avg grade (stored grades)</span></div>
-  <div class="stat-card"><span class="stat-value">{{pass_rate}}%</span><span class="stat-label">Pass rate (stored grades)</span></div>
+  <div class="stat-card" style="--i:0"><span class="stat-value count-up" style="--n:{{total_students}}"></span><span class="stat-label">Students (institute)</span></div>
+  <div class="stat-card" style="--i:1"><span class="stat-value count-up" style="--n:{{my_courses}}"></span><span class="stat-label">My courses</span></div>
+  <div class="stat-card" style="--i:2"><span class="stat-value count-up" style="--n:{{my_students}}"></span><span class="stat-label">My students</span></div>
+  <div class="stat-card" style="--i:3"><span class="stat-value">{{avg_attendance}}%</span><span class="stat-label">Avg attendance (my courses)</span></div>
+  <div class="stat-card" style="--i:4"><span class="stat-value">{{avg_grade}}%</span><span class="stat-label">Avg grade (stored grades)</span></div>
+  <div class="stat-card" style="--i:5"><span class="stat-value">{{pass_rate}}%</span><span class="stat-label">Pass rate (stored grades)</span></div>
 </section>
 
-<section class="card">
+<section class="card" style="--i:2">
   <h2>Grade distribution</h2>
   <p class="muted">From grades stored by the C++ engine (your courses only).</p>
   <div class="bar-chart">{{grade_chart}}</div>
 </section>
 
-<section class="card">
+<section class="card" style="--i:3">
   <h2>Attendance by course</h2>
-  <p class="muted">Red bars are below the 75% eligibility line.</p>
+  <p class="muted">Dashed line marks the 75% eligibility cutoff; glowing bars are below it.</p>
   <div class="bar-chart">{{attendance_chart}}</div>
 </section>
