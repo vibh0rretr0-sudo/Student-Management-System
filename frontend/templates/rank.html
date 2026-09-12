@@ -1,0 +1,13 @@
+<div class="page-head">
+  <h2>Course rank — {{course_title}}</h2>
+</div>
+
+<section class="card" style="--i:0">
+  <p class="hint">Students ranked by overall % for this course only (50% assignment average + 50% exam average; missing marks count as zero; ties broken by roll number). Computed by the C++ engine.</p>
+  <table class="data-table">
+    <thead><tr><th>Rank</th><th>Roll</th><th>Student</th><th>Section</th><th>Overall %</th></tr></thead>
+    <tbody>{{rows}}</tbody>
+  </table>
+  {{engine_note}}
+</section>
+<a class="btn btn-ghost" href="{{back_link}}">Back to course</a>

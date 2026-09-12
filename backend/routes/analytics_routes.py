@@ -34,6 +34,37 @@ def course_grades(request):
     )
 
 
+@route("GET", r"/courses/(?P<course_id>\d+)/rank")
+@login_required
+def course_rank(request):
+    """Per-course ranking (C++ engine) — viewable by any professor, like grades."""
+    course_id = int(request.params["course_id"])
+    course = courses.get(course_id)
+    if course is None:
+        raise NotFound("That course does not exist.")
+
+    try:
+        ranked = cpp_engine.compute_rank(assessments.course_grade_inputs(course_id))
+        engine_note = ""
+    except cpp_engine.EngineError as exc:
+        ranked = []
+        engine_note = str(exc)
+
+    for r in ranked:
+        r["section_name"] = course["section_name"]
+
+    body = template.render(
+        "rank.html",
+        course_title=_course_title(course),
+        rows=_rank_rows_html(ranked),
+        engine_note=template.esc(engine_note),
+        back_link=f"/courses/{course_id}",
+    )
+    return Response.html(
+        template.page(request, f"Course rank — {course['course_code']}", body, active="courses")
+    )
+
+
 @route("GET", "/rankings")
 @login_required
 def rankings(request):
