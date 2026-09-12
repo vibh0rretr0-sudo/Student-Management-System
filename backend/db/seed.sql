@@ -60,7 +60,7 @@ INSERT INTO assignments (id, course_id, title, description, max_marks, due_date)
     (4, 3, 'Assignment 1: ER Modeling',       'Draw ER diagrams for given case studies.',   20, '2026-08-25'),
     (5, 4, 'Assignment 1: Set Theory',        'Problems on sets and relations.',            15, '2026-08-15');
 
--- ---------- Exam marks per assignment ----------
+-- ---------- Assignment submissions ----------
 INSERT INTO submissions (id, assignment_id, student_id, marks_obtained, submitted_on) VALUES
     ( 1, 1, 1, 18, '2026-08-08'), ( 2, 1, 2, 15, '2026-08-09'),
     ( 3, 1, 3, 12, '2026-08-10'), ( 4, 1, 4,  8, '2026-08-10'),

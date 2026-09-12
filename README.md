@@ -67,7 +67,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 │   ├── tests/               # stdin fixtures with hand-computed expected outputs
 │   └── build/               # compiled binary (git-ignored)
 ├── frontend/
-│   ├── templates/           # 15 HTML templates ({{placeholder}} substitution)
+│   ├── templates/           # 16 HTML templates ({{placeholder}} substitution)
 │   └── static/css/          # the one stylesheet
 ├── scripts/                 # setup_db.py, build_cpp.py
 └── docs/                    # PRD, Architecture, Design, Phases, Rules, setup guides

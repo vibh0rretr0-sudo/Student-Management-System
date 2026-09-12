@@ -243,6 +243,9 @@ Motion is an enhancement; the static UI is identical informationally.
   sync without JS."
 - "Every dynamic number has a **static fallback**; progressive enhancement
   means the page degrades to a fully working 2015-era UI."
+- "Marks saves are true **upserts** using MySQL 8.0.19+ row aliases
+  (`INSERT ... AS new ON DUPLICATE KEY UPDATE ... = new.col`) — readable,
+  and a version detail worth naming."
 - "I proved the restyle didn't change behavior: a **snapshot diff of 18
   routes** — statuses, forms, inputs, links, permission probes — came back
   identical."

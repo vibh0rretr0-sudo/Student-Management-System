@@ -16,7 +16,14 @@ def static_file(request):
     page itself loads the stylesheet, and CSS contains no data.
     """
     requested = (STATIC_ROOT / request.params["rest"]).resolve()
-    if not str(requested).startswith(str(STATIC_ROOT)) or not requested.is_file():
-        return Response.html("Not found", status=404, content_type="text/plain; charset=utf-8")
+    not_found = Response(404, "Not found", "text/plain; charset=utf-8")
+    try:
+        # Containment test (not a string prefix): rejects ../ traversal and
+        # any sibling directory that merely starts with 'static'.
+        requested.relative_to(STATIC_ROOT)
+    except ValueError:
+        return not_found
+    if not requested.is_file():
+        return not_found
     content_type = CONTENT_TYPES.get(requested.suffix, "application/octet-stream")
     return Response(200, requested.read_bytes(), content_type)
