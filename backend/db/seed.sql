@@ -6,7 +6,7 @@
 -- Demo story baked into the data:
 --  * Course 1 (CS101, SN1) has full data: 2 assignments + midterm marks
 --    + 8 attendance sessions — enough to demo all three C++ modes.
---  * Student 4 (Ishita) sits at 50% attendance  -> Not Eligible.
+--  * Student 4 (Ishita) sits at 25% attendance  -> Not Eligible.
 --  * Student 5 (Kunal) sits at exactly 75%      -> Eligible (boundary).
 --  * Professor 2 (sharma) owns Course 5 to demo per-professor scoping.
 -- ============================================================
@@ -89,7 +89,7 @@ INSERT INTO exam_marks (exam_id, student_id, marks_obtained) VALUES
     (5, 6, 33), (5, 7, 21);
 
 -- ---------- Attendance (Course 1: 8 Monday sessions) ----------
--- Demo story: student 4 = 50% (Not Eligible), student 5 = 75% (boundary Eligible).
+-- Demo story: student 4 = 25% (Not Eligible), student 5 = 75% (boundary Eligible).
 INSERT INTO attendance (student_id, course_id, date, status) VALUES
     (1, 1, '2026-07-27', 'present'), (2, 1, '2026-07-27', 'present'), (3, 1, '2026-07-27', 'present'), (4, 1, '2026-07-27', 'present'), (5, 1, '2026-07-27', 'present'),
     (1, 1, '2026-08-03', 'present'), (2, 1, '2026-08-03', 'present'), (3, 1, '2026-08-03', 'present'), (4, 1, '2026-08-03', 'absent'),  (5, 1, '2026-08-03', 'present'),

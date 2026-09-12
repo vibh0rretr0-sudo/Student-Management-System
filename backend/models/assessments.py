@@ -128,6 +128,12 @@ def upsert_grade(student_id, course_id, grade, percentage, term):
 # ---------- Aggregates for the C++ engine ----------
 # Per student: sum of per-assessment percentages (marks/max*100, missing = 0)
 # and the number of assessments. The engine turns these into the final %.
+#
+# "Conducted" rule: an assessment enters the denominator only once at
+# least ONE student has marks recorded for it course-wide (an unheld
+# exam or unsubmitted assignment must not drag everyone's average
+# down). A specific student's missing marks for a CONDUCTED assessment
+# still count as 0 — that part is the confirmed "missing = 0" rule.
 
 def course_grade_inputs(course_id):
     """Enrolled students of one course with assignment/exam percentage sums."""
@@ -140,8 +146,12 @@ def course_grade_inputs(course_id):
                xn.exam_n AS exam_n
         FROM enrollments e
         JOIN students s ON s.id = e.student_id
-        CROSS JOIN (SELECT COUNT(*) AS assign_n FROM assignments WHERE course_id = %s) an
-        CROSS JOIN (SELECT COUNT(*) AS exam_n FROM exams WHERE course_id = %s) xn
+        CROSS JOIN (SELECT COUNT(*) AS assign_n FROM assignments a
+                    WHERE a.course_id = %s
+                      AND EXISTS (SELECT 1 FROM submissions sub WHERE sub.assignment_id = a.id)) an
+        CROSS JOIN (SELECT COUNT(*) AS exam_n FROM exams x
+                    WHERE x.course_id = %s
+                      AND EXISTS (SELECT 1 FROM exam_marks em WHERE em.exam_id = x.id)) xn
         LEFT JOIN (
             SELECT sub.student_id AS sid, a.course_id AS cid,
                    SUM(sub.marks_obtained / a.max_marks * 100) AS assign_sum
@@ -176,20 +186,26 @@ def section_overall_inputs(section_id):
         FROM students s
         LEFT JOIN (
             SELECT e2.student_id AS sid,
-                   SUM(sub.marks_obtained / a.max_marks * 100) AS assign_sum,
-                   COUNT(a.id) AS assign_n
+                   SUM(CASE WHEN sub.student_id IS NOT NULL
+                            THEN sub.marks_obtained / a.max_marks * 100 ELSE 0 END) AS assign_sum,
+                   COUNT(DISTINCT CASE WHEN con.n > 0 THEN a.id END) AS assign_n
             FROM enrollments e2
             JOIN assignments a ON a.course_id = e2.course_id
             LEFT JOIN submissions sub ON sub.assignment_id = a.id AND sub.student_id = e2.student_id
+            LEFT JOIN (SELECT assignment_id, COUNT(*) AS n FROM submissions GROUP BY assignment_id) con
+                   ON con.assignment_id = a.id
             GROUP BY e2.student_id
         ) ag ON ag.sid = s.id
         LEFT JOIN (
             SELECT e3.student_id AS sid,
-                   SUM(em.marks_obtained / x.max_marks * 100) AS exam_sum,
-                   COUNT(x.id) AS exam_n
+                   SUM(CASE WHEN em.student_id IS NOT NULL
+                            THEN em.marks_obtained / x.max_marks * 100 ELSE 0 END) AS exam_sum,
+                   COUNT(DISTINCT CASE WHEN conx.n > 0 THEN x.id END) AS exam_n
             FROM enrollments e3
             JOIN exams x ON x.course_id = e3.course_id
             LEFT JOIN exam_marks em ON em.exam_id = x.id AND em.student_id = e3.student_id
+            LEFT JOIN (SELECT exam_id, COUNT(*) AS n FROM exam_marks GROUP BY exam_id) conx
+                   ON conx.exam_id = x.id
             GROUP BY e3.student_id
         ) ex ON ex.sid = s.id
         WHERE s.section_id = %s
