@@ -55,9 +55,12 @@ def _attendance_chart_html(courses):
             continue
         width = round(c["rate"], 1)
         css_class = "bar-fill warn" if c["rate"] < 75 else "bar-fill"
+        # The dashed 75%-line marker only belongs on bars that fall BELOW the
+        # cutoff: on at-or-above bars it would just peek past the bar tip.
+        track_class = "bar-track threshold" if c["rate"] < 75 else "bar-track"
         bars.append(
             f'<div class="bar-row" style="--i:{i}"><span class="bar-label">{template.esc(c["label"])}</span>'
-            f'<div class="bar-track threshold"><div class="{css_class}" style="--w:{width}%"></div></div>'
+            f'<div class="{track_class}"><div class="{css_class}" style="--w:{width}%"></div></div>'
             f'<span class="bar-value">{c["rate"]}%</span></div>'
         )
     if not courses:
