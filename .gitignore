@@ -1,0 +1,23 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+backend/venv/
+
+# --- C++ build artifacts ---
+cpp_module/build/
+
+# --- Secrets / environment-specific config ---
+# config.py holds DB credentials; a safe example is provided in config.example.py
+backend/config.py
+
+# --- MySQL local artifacts ---
+*.sql.gz
+mysql_dump_*.sql
+
+# --- OS / editor junk ---
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
