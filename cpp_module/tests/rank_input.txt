@@ -1,0 +1,5 @@
+1	Aarav Sharma	01	255	3	160	2
+2	Diya Patel	02	245	3	152	2
+3	Rohan Gupta	03	205	3	112	2
+4	Ishita Verma	04	175	3	72	2
+5	Kunal Singh	05	230	3	124	2
