@@ -63,8 +63,8 @@ def course_edit_form(request):
         "section_options": _section_options(str(course["section_id"])),
         "term": template.esc(course["term"]),
         "day_options": _day_options(course["day_of_week"]),
-        "start": template.esc(course["start_time"][:5]),
-        "end": template.esc(course["end_time"][:5]),
+        "start": template.esc(_fmt_time(course["start_time"])),
+        "end": template.esc(_fmt_time(course["end_time"])),
     }
     body = _course_form(request, form_title="Edit Course",
                         action=f"/courses/{course_id}/edit", values=values,
@@ -191,12 +191,22 @@ def _day_options(selected=None):
     return "".join(options)
 
 
+def _fmt_time(value):
+    """MySQL TIME columns arrive as datetime.timedelta via PyMySQL; format HH:MM."""
+    if isinstance(value, str):
+        return value[:5]
+    total_seconds = int(value.total_seconds())
+    hours, rem = divmod(total_seconds, 3600)
+    minutes = rem // 60
+    return f"{hours:02d}:{minutes:02d}"
+
+
 def _course_rows_html(rows):
     if not rows:
         return '<tr><td colspan="6" class="empty">No courses yet — add your first one.</td></tr>'
     out = []
     for c in rows:
-        slot = f"{courses.WEEKDAYS[c['day_of_week']]} {c['start_time'][:5]}–{c['end_time'][:5]}"
+        slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
         out.append(
             "<tr>"
             f"<td><a href=\"/courses/{c['id']}\">{template.esc(c['course_code'])}</a></td>"
@@ -211,7 +221,7 @@ def _course_rows_html(rows):
 
 
 def _course_info_rows(c):
-    slot = f"{courses.WEEKDAYS[c['day_of_week']]} {c['start_time'][:5]}–{c['end_time'][:5]}"
+    slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
     rows = [
         ("Code", c["course_code"]),
         ("Section", c["section_name"]),
