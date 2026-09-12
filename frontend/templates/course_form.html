@@ -1,0 +1,39 @@
+<section class="card form-card">
+  <h2>{{form_title}}</h2>
+  <form method="post" action="{{action}}">
+    <label class="field">
+      <span>Course name</span>
+      <input type="text" name="course_name" value="{{name_value}}" required maxlength="100">
+    </label>
+    <label class="field">
+      <span>Course code</span>
+      <input type="text" name="course_code" value="{{code_value}}" required maxlength="20">
+      <small>e.g. CS101 — unique per section.</small>
+    </label>
+    <label class="field">
+      <span>Section</span>
+      <select name="section_id" required>{{section_options}}</select>
+    </label>
+    <label class="field">
+      <span>Term</span>
+      <input type="text" name="term" value="{{term_value}}" required maxlength="20">
+    </label>
+    <label class="field">
+      <span>Day of week</span>
+      <select name="day_of_week" required>{{day_options}}</select>
+    </label>
+    <label class="field">
+      <span>Start time</span>
+      <input type="time" name="start_time" value="{{start_value}}" required>
+    </label>
+    <label class="field">
+      <span>End time</span>
+      <input type="time" name="end_time" value="{{end_value}}" required>
+      <small>Overlapping slots within the same section are rejected.</small>
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn">Save</button>
+      <a class="btn btn-ghost" href="{{cancel_link}}">Cancel</a>
+    </div>
+  </form>
+</section>

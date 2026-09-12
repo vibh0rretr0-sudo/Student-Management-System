@@ -1,0 +1,34 @@
+<section class="card form-card">
+  <h2>{{form_title}}</h2>
+  <form method="post" action="{{action}}">
+    <label class="field">
+      <span>Full name</span>
+      <input type="text" name="name" value="{{name_value}}" required maxlength="100">
+    </label>
+    <label class="field">
+      <span>Roll number</span>
+      <input type="text" name="roll_number" value="{{roll_value}}" required maxlength="20">
+      <small>Unique within the student's section.</small>
+    </label>
+    <label class="field">
+      <span>Section</span>
+      <select name="section_id" required>{{section_options}}</select>
+    </label>
+    <label class="field">
+      <span>Date of birth</span>
+      <input type="date" name="date_of_birth" value="{{dob_value}}">
+    </label>
+    <label class="field">
+      <span>Contact</span>
+      <input type="text" name="contact" value="{{contact_value}}" maxlength="20">
+    </label>
+    <label class="field">
+      <span>Enrollment date</span>
+      <input type="date" name="enrollment_date" value="{{enrolled_value}}" required>
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn">Save</button>
+      <a class="btn btn-ghost" href="{{cancel_link}}">Cancel</a>
+    </div>
+  </form>
+</section>

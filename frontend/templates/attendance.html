@@ -1,0 +1,24 @@
+<div class="page-head">
+  <h2>Attendance — {{course_title}}</h2>
+  <label class="chip-label">Session date: <strong>{{date}}</strong></label>
+</div>
+
+<section class="card">
+  <h3>Mark for {{date}}</h3>
+  <form method="post" action="/courses/{{course_id}}/attendance">
+    <input type="hidden" name="date" value="{{date}}">
+    <table class="data-table">
+      <thead><tr><th>Roll</th><th>Student</th><th>Status</th><th></th></tr></thead>
+      <tbody>{{rows}}</tbody>
+    </table>
+    <button type="submit" class="btn">Save attendance</button>
+  </form>
+  <p class="chips">{{dates}}</p>
+  <p class="hint">Pick a recorded date to review or re-mark that session.</p>
+</section>
+
+<section class="card">
+  <h3>Eligibility summary (75% rule — computed by C++)</h3>
+  {{summary}}
+  {{engine_note}}
+</section>

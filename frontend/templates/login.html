@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login · Student Management System</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body class="login-body">
+  <main class="login-wrap">
+    <section class="login-card">
+      <div class="login-brand">JECRC <span>SMS</span></div>
+      <p class="login-sub">Student Management System — professor login</p>
+      {{error}}
+      <form method="post" action="/login">
+        <label class="field">
+          <span>Username</span>
+          <input type="text" name="username" autocomplete="username" required autofocus>
+        </label>
+        <label class="field">
+          <span>Password</span>
+          <input type="password" name="password" autocomplete="current-password" required>
+        </label>
+        <button type="submit" class="btn btn-block">Log in</button>
+      </form>
+      <p class="login-hint">Demo account after seeding: <code>vibhor</code> / <code>prof123</code></p>
+    </section>
+  </main>
+</body>
+</html>

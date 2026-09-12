@@ -1,0 +1,18 @@
+<div class="page-head">
+  <form method="get" action="/students" class="filter-bar">
+    <input type="text" name="q" value="{{q}}" placeholder="Search name or roll number…" class="search-input">
+    <select name="course_id">{{course_options}}</select>
+    <select name="section_id">{{section_options}}</select>
+    <button type="submit" class="btn">Filter</button>
+  </form>
+  <a class="btn" href="/students/new">+ Add student</a>
+</div>
+
+<section class="card">
+  <table class="data-table">
+    <thead>
+      <tr><th>Roll</th><th>Name</th><th>Section</th><th>Contact</th><th>Enrolled</th><th></th></tr>
+    </thead>
+    <tbody>{{rows}}</tbody>
+  </table>
+</section>

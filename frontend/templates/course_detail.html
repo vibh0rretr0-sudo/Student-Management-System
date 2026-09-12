@@ -1,0 +1,17 @@
+<section class="card">
+  <h2>Course details</h2>
+  <table class="detail-table"><tbody>{{info}}</tbody></table>
+  <div class="form-actions">{{owner_links}}</div>
+</section>
+
+<section class="card">
+  <h2>Enrolled students</h2>
+  <table class="data-table">
+    <thead><tr><th>Roll</th><th>Name</th><th>Section</th><th></th></tr></thead>
+    <tbody>{{enrolled}}</tbody>
+  </table>
+  <h3>Add from this section</h3>
+  {{enroll_section}}
+</section>
+
+{{delete_form}}

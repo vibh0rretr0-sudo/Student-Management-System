@@ -1,0 +1,16 @@
+<section class="card">
+  <h2>Profile</h2>
+  <table class="detail-table"><tbody>{{student_rows}}</tbody></table>
+  <div class="form-actions">
+    {{edit_link}}
+    <a class="btn btn-ghost" href="{{back_link}}">Back to students</a>
+  </div>
+</section>
+
+<section class="card">
+  <h2>Enrolled courses</h2>
+  {{courses_html}}
+</section>
+
+{{no_edit_note}}
+{{delete_form}}
