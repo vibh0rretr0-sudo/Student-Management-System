@@ -276,7 +276,6 @@ small { color: var(--text-soft); }
 .stat-value.count-up { counter-reset: stat var(--n); animation: count-up 1.1s ease-out both; }
 .stat-value.count-up::after { content: counter(stat); }
 @keyframes count-up { from { --n: 0; } }
-.stat-value.no-count { background: none; -webkit-background-clip: initial; background-clip: initial; color: var(--accent); }
 .stat-label { color: var(--text-soft); font-size: .8rem; font-weight: 600; }
 .error-card { border-color: var(--danger-soft); }
 .error-card::before { content: none; }
@@ -386,7 +385,11 @@ small { color: var(--text-soft); }
 .topbar-right { display: flex; align-items: center; gap: .8rem; }
 .topbar-user { color: var(--text-soft); font-weight: 650; font-size: .9rem; }
 
-/* ---------- 9. theme toggle (pure CSS) ---------- */
+/* ---------- 9. theme toggle (pure CSS) ----------
+   iOS-style shifter: the gradient thumb overlays exactly one glyph at a
+   time. The math is fixed by construction — glyphs are 16px wide with a
+   5px gap and 9px side padding, so the thumb is 16px at left:9px and
+   shifts exactly 16+5 = 21px to land on the second glyph. */
 .theme-toggle { position: relative; display: inline-flex; }
 .theme-toggle input {
   position: absolute;
@@ -397,36 +400,47 @@ small { color: var(--text-soft); }
 .toggle-ui {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 10px;
+  gap: 5px;
+  padding: 3px 9px;
   border-radius: 999px;
   border: 1px solid var(--glass-border);
   background: var(--glass-inner);
   cursor: pointer;
-  font-size: .82rem;
+  font-size: .8rem;
   line-height: 1;
   position: relative;
-  transition: border-color .2s ease, box-shadow .2s ease;
+  transition: border-color .2s ease, background .2s ease;
   user-select: none;
 }
 .toggle-ui:hover { border-color: var(--accent); }
-.toggle-ui .glyph { opacity: .55; transition: opacity .2s ease, transform .3s ease; }
-.toggle-ui::after {
+.toggle-ui:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.toggle-ui .glyph {
+  position: relative;
+  z-index: 1;                 /* glyphs paint above the thumb */
+  width: 16px;                /* reserved: identical for both glyphs */
+  text-align: center;
+  opacity: .55;
+  transition: opacity .25s ease, transform .25s ease;
+}
+.toggle-ui::before {
   content: "";
   position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 22px;
-  height: calc(100% - 6px);
+  z-index: 0;                 /* thumb paints below the glyphs */
+  top: 2px;
+  bottom: 2px;
+  left: 9px;
+  width: 16px;
   border-radius: 999px;
   background: var(--grad-accent);
-  opacity: .28;
-  transition: transform .25s cubic-bezier(.3, 1.4, .4, 1);
+  opacity: .32;
+  transition: transform .28s cubic-bezier(.3, 1.4, .4, 1), opacity .28s ease;
 }
-body:has(#theme-toggle:checked) .toggle-ui::after { transform: translateX(26px); opacity: .45; }
-body:has(#theme-toggle:checked) .toggle-ui .glyph-sun { opacity: .35; }
-body:has(#theme-toggle:checked) .toggle-ui .glyph-moon { opacity: 1; transform: scale(1.12); }
-body:has(#theme-toggle:checked) .toggle-ui .glyph-sun { transform: scale(.92); }
+body:has(#theme-toggle:checked) .toggle-ui::before {
+  transform: translateX(21px);  /* 16px glyph + 5px gap */
+  opacity: .45;
+}
+body:has(#theme-toggle:checked) .toggle-ui .glyph-sun { opacity: .35; transform: scale(.9); }
+body:has(#theme-toggle:checked) .toggle-ui .glyph-moon { opacity: 1; transform: scale(1.1); }
 
 /* ---------- tables ---------- */
 .data-table { width: 100%; border-collapse: collapse; }
@@ -591,16 +605,20 @@ button.btn { font-family: inherit; }
   background: linear-gradient(90deg, #d9770c, #f7a94e);
   box-shadow: 0 0 14px rgba(217, 119, 12, .45);   /* threshold glow */
 }
-/* dashed 75% eligibility line on attendance tracks */
+/* dashed 75% eligibility marker on attendance tracks: drawn UNDER the bar
+   fill so a bar covers it instead of the dash cutting through the bar, and
+   inset 2px so the dashes never poke past the track's rounded corners. */
 .bar-track.threshold::after {
   content: "";
   position: absolute;
-  top: -2px;
-  bottom: -2px;
+  top: 2px;
+  bottom: 2px;
   left: 75%;
+  width: 0;
   border-left: 2px dashed var(--danger);
-  opacity: .55;
+  opacity: .5;
 }
+.bar-track.threshold .bar-fill { position: relative; z-index: 1; }
 .bar-value { font-size: .82rem; font-weight: 700; font-variant-numeric: tabular-nums; }
 
 .marks-block {
