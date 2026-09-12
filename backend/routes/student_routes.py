@@ -126,6 +126,27 @@ def student_delete(request):
 
 # ---------- helpers ----------
 
+def _student_rows_html(rows):
+    """Table rows for the students list. Any professor can view every
+    student; the Edit link leads to a form that enforces edit rights."""
+    if not rows:
+        return '<tr><td colspan="6" class="empty">No students match.</td></tr>'
+    out = []
+    for s in rows:
+        out.append(
+            "<tr>"
+            f"<td>{template.esc(s['roll_number'])}</td>"
+            f"<td><a href=\"/students/{s['id']}\">{template.esc(s['name'])}</a></td>"
+            f"<td>{template.esc(s['section_name'])}</td>"
+            f"<td>{template.esc(s['contact'] or '—')}</td>"
+            f"<td>{template.esc(s['enrollment_date'])}</td>"
+            f"<td class=\"actions\"><a class=\"btn btn-small btn-ghost\" "
+            f"href=\"/students/{s['id']}/edit\">Edit</a></td>"
+            "</tr>"
+        )
+    return "".join(out)
+
+
 def _validated_student(request):
     require(request.form, "name", "roll_number", "section_id", "enrollment_date")
     return {

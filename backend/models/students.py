@@ -82,16 +82,25 @@ def search(query=None, course_id=None, section_id=None):
 
 
 def can_edit(student_id, professor_id):
-    """True when the student is enrolled in at least one of the professor's courses."""
+    """Edit rights under the confirmed view-all/edit-own model.
+
+    A professor may edit a student when either:
+      - the student is enrolled in at least one of their courses, or
+      - the student is 'unclaimed' (zero enrollments anywhere) — otherwise
+        a freshly created student could never be edited or removed by
+        anyone. Once the student joins any course, only that course's
+        professor retains edit rights.
+    """
     row = db.fetch_one(
-        """SELECT 1 AS ok
-           FROM enrollments e
-           JOIN courses c ON c.id = e.course_id
-           WHERE e.student_id = %s AND c.professor_id = %s
-           LIMIT 1""",
-        (student_id, professor_id),
+        """SELECT
+               EXISTS(SELECT 1
+                      FROM enrollments e
+                      JOIN courses c ON c.id = e.course_id
+                      WHERE e.student_id = %s AND c.professor_id = %s) AS mine,
+               (SELECT COUNT(*) FROM enrollments WHERE student_id = %s) AS total""",
+        (student_id, professor_id, student_id),
     )
-    return row is not None
+    return bool(row and (row["mine"] or row["total"] == 0))
 
 
 def enrolled_courses(student_id):

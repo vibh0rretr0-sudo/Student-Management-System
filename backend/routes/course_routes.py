@@ -3,7 +3,6 @@ from backend.models import courses
 from backend.routes import template
 from backend.routes.helpers import NotFound, Response, login_required, route
 from backend.routes.validation import parse_date, parse_int, parse_time, require
-from backend.routes.student_routes import _section_options as _all_section_options
 
 
 @route("GET", "/courses")
