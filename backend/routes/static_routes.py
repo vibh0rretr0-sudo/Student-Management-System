@@ -2,16 +2,19 @@
 from pathlib import Path
 
 from backend import config
-from backend.routes.helpers import Response, login_required, route
+from backend.routes.helpers import Response, route
 
 CONTENT_TYPES = {".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png"}
 STATIC_ROOT = Path(config.STATIC_DIR).resolve()
 
 
 @route("GET", r"/static/(?P<rest>.+)")
-@login_required
 def static_file(request):
-    """Serve a static file; path traversal outside static/ is rejected."""
+    """Serve a static file; path traversal outside static/ is rejected.
+
+    Static assets are intentionally PUBLIC (no login required): the login
+    page itself loads the stylesheet, and CSS contains no data.
+    """
     requested = (STATIC_ROOT / request.params["rest"]).resolve()
     if not str(requested).startswith(str(STATIC_ROOT)) or not requested.is_file():
         return Response.html("Not found", status=404, content_type="text/plain; charset=utf-8")
