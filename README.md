@@ -90,12 +90,14 @@ Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / 
 
 ## Screenshots
 
-<!-- TODO: replace with real captures after running the app -->
 | | |
 |---|---|
-| **Login** — `docs/screenshots/login.png` | **Dashboard** — `docs/screenshots/dashboard.png` |
-| **Grades (C++)** — `docs/screenshots/grades.png` | **Attendance & eligibility** — `docs/screenshots/attendance.png` |
-| **Rankings** — `docs/screenshots/rankings.png` | **Marks entry** — `docs/screenshots/marks.png` |
+| **Login** | **Dashboard (CSS-only charts)** |
+| ![](docs/screenshots/login.png) | ![](docs/screenshots/dashboard.png) |
+| **Grades — computed by the C++ engine** | **Attendance & 75% eligibility (C++)** |
+| ![](docs/screenshots/grades.png) | ![](docs/screenshots/attendance.png) |
+| **Section rankings (C++)** | **Marks entry grid** |
+| ![](docs/screenshots/rankings.png) | ![](docs/screenshots/marks.png) |
 
 ## What I built & learned
 
