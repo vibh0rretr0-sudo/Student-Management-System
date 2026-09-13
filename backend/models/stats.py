@@ -1,4 +1,12 @@
-"""Aggregated numbers for the dashboard (summary cards + CSS-only charts)."""
+"""Aggregated numbers for the dashboard (summary cards + CSS-only charts).
+
+All aggregation is pushed into SQL (AVG/SUM/COUNT) — Python only rounds
+and packages. The recurring trick: MySQL evaluates boolean expressions
+as 1/0, so AVG(a.status = 'present') IS the attendance rate; multiplying
+by 100 and rounding is all Python adds. Every card tolerates "no data
+yet" by returning None, which the dashboard renders as an em dash
+instead of a misleading 0.
+"""
 from backend.models import db
 
 
@@ -35,6 +43,9 @@ def _cards(professor_id):
            WHERE c.professor_id = %s""",
         (professor_id,),
     )
+    # NULLIF(COUNT(*),0) is the divide-by-zero guard: with zero graded
+    # students the division yields NULL (not an error), and the card
+    # shows '—' instead of inventing a 100% pass rate.
     return {
         "total_students": total_students,
         "my_courses": my_courses,
@@ -47,6 +58,10 @@ def _cards(professor_id):
 
 def _grade_distribution(professor_id):
     """Count of stored (C++-computed) grades in each percentage band."""
+    # Bands partition [0,100] with no gaps or overlaps: each upper bound
+    # is .99 so BETWEEN (inclusive on both ends) can't double-count a
+    # boundary value into two bands. Grades come from the grades table —
+    # i.e. only what the C++ engine has actually computed and stored.
     bands = [
         ("90-100% (O)", 90, 100),
         ("75-89% (A)", 75, 89.99),
@@ -76,6 +91,9 @@ def _attendance_by_course(professor_id):
            WHERE c.professor_id = %s
            GROUP BY c.id
            ORDER BY c.course_code""",
+        # LEFT JOIN: courses with no sessions keep their row (rate NULL),
+        # so the chart shows 'no sessions' rather than silently hiding
+        # the course.
         (professor_id,),
     )
     return [

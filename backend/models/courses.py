@@ -31,6 +31,10 @@ def list_for_professor(professor_id):
            ORDER BY sec.section_name, c.course_code""",
         (professor_id,),
     )
+    # Two SQL details worth remembering:
+    #   LEFT JOIN  -> a course with zero enrollments still appears (COUNT 0)
+    #   COUNT(e.id) -> counts matched rows only; COUNT(*) would count the
+    #                  NULL-extended row and show 1 for empty courses
 
 
 def get(course_id):
@@ -75,7 +79,12 @@ def delete(course_id):
 
 
 def is_owner(course_id, professor_id):
-    """True when the course belongs to the professor."""
+    """True when the course belongs to the professor.
+
+    One query doing double duty: ownership check AND existence check —
+    handlers call this before every edit, and non-owners can't even
+    learn that the id exists (same 403 either way).
+    """
     row = db.fetch_one(
         "SELECT 1 AS ok FROM courses WHERE id = %s AND professor_id = %s",
         (course_id, professor_id),
@@ -91,6 +100,10 @@ def _ensure_no_clash(section_id, day_of_week, start_time, end_time, exclude_cour
     """Reject a slot that overlaps another course of the same section.
 
     Two [start, end) intervals overlap when a.start < b.end AND b.start < a.end.
+    Mapping a=existing course, b=new slot gives the WHERE below — note the
+    parameters arrive as (end_time, start_time) in that order. They LOOK
+    swapped; they are not. (And touching an edge exactly — 10:00 ending
+    where 10:00 begins — is allowed, hence strict <.)
     """
     clash = db.fetch_one(
         """SELECT course_name FROM courses
@@ -101,6 +114,8 @@ def _ensure_no_clash(section_id, day_of_week, start_time, end_time, exclude_cour
         (section_id, day_of_week, end_time, start_time, exclude_course_id or 0),
     )
     if clash:
+        # The error names the clashing course — the professor can fix the
+        # slot without opening the timetable.
         raise ValueError(
             f"Schedule clash: section already has '{clash['course_name']}' overlapping this slot."
         )
@@ -147,6 +162,9 @@ def unenroll(course_id, student_id):
 
 def enrollable_students(course_id):
     """Students in the course's section who are not yet enrolled in it."""
+    # Section-scoped on purpose (PRD): a course belongs to one section,
+    # so its dropdown lists only that section's students — NOT IN keeps
+    # already-enrolled ones out of the re-enroll list.
     course = get(course_id)
     if course is None:
         return []
