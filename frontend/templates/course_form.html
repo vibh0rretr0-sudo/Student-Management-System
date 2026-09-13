@@ -1,5 +1,6 @@
-<!-- Purpose: add/edit course form. The weekly slot fields feed the
-     section schedule-clash check (courses._ensure_no_clash). -->
+<!-- Purpose: add/edit course form (one template, two flows — the action
+     placeholder carries the POST target). The weekly slot fields feed
+     the professor double-booking check (courses._ensure_professor_free). -->
 <section class="card form-card" style="--i:0">
   <h2>{{form_title}}</h2>
   <form method="post" action="{{action}}">
@@ -31,7 +32,7 @@
     <label class="field">
       <span>End time</span>
       <input type="time" name="end_time" value="{{end_value}}" required>
-      <small>Overlapping slots within the same section are rejected.</small>
+      <small>You cannot teach overlapping slots in the same batch.</small>
     </label>
     <div class="form-actions">
       <button type="submit" class="btn">Save</button>
