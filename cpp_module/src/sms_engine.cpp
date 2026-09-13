@@ -22,8 +22,13 @@
 #include <string>
 #include <vector>
 
+// Anonymous namespace = internal linkage: these symbols stay private to
+// this translation unit (C++'s answer to Python's module underscore).
 namespace {
 
+// Single source of truth for the two policy thresholds. Note both use
+// >= (INCLUSIVE): 40.0 exactly passes, 75.0 exactly is eligible — the
+// fixtures pin these boundaries on purpose.
 const double PASS_MARK_PCT = 40.0;   // confirmed grading scheme
 const double ATTENDANCE_MIN_PCT = 75.0;  // confirmed eligibility rule
 
@@ -62,6 +67,9 @@ std::string trim(const std::string& s) {
 }
 
 bool to_int(const std::string& s, int& out) {
+    // Strict parse: std::stoi("12abc") happily returns 12 — the
+    // `used == s.size()` check rejects that silent truncation, so a
+    // corrupted TSV field fails the row instead of poisoning the math.
     try {
         std::size_t used = 0;
         out = std::stoi(s, &used);
@@ -134,6 +142,8 @@ int run_grades(std::istream& in) {
 }
 
 // ---------- mode: attendance ----------
+// The only mode with a header line: line 1 is the total session count
+// (the common denominator), every later line is one student.
 // O(n) over the n students; the eligibility test is one comparison.
 int run_attendance(std::istream& in) {
     std::string first;
@@ -210,7 +220,10 @@ int run_rank(std::istream& in) {
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    // Detach C++ streams from C stdio: pure speed for line-heavy I/O.
     std::ios::sync_with_stdio(false);
+    // Exit-code contract (what backend/cpp_engine.py relies on):
+    //   0 = success, 1 = bad data, 2 = usage error (wrong/no mode).
     if (argc != 2) {
         std::cerr << "usage: sms_engine <grades|attendance|rank>\n";
         return 2;
