@@ -101,7 +101,7 @@ the DB and renders updated HTML.
 | MySQL + PyMySQL, parameterized queries only | Real client-server RDBMS experience; placeholders make SQL injection structurally impossible |
 | Least-privilege DB user (`sms_app`) | The app never connects as root; schema changes go through `schema.sql` only, never ad-hoc edits |
 | PBKDF2 hashing + in-memory sessions | Stdlib-only auth that can still be defended line by line |
-| 3NF schema, explicit foreign keys, cascade deletes | Per-section roll uniqueness, enrollment uniqueness, schedule-clash prevention at write time |
+| 3NF schema, explicit foreign keys, cascade deletes | Per-section roll uniqueness, enrollment uniqueness, professor double-booking rejected at write time |
 | UI: JECRC red `#B71C1C` as accent on white/light gray, charcoal text | Pure red-on-white everywhere would be harsh; red marks headers, buttons, active nav |
 | Sidebar + topbar layout, tables/cards, separate form pages (no JS modals) | Semantic HTML, one stylesheet, kebab-case class names |
 | CSS-only charts (div bars sized inline by Python) | No charting library, no client-side script — Python computes, HTML displays |

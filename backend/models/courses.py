@@ -1,9 +1,10 @@
 """Courses, sections, and enrollment management.
 
 A course belongs to one professor, one section, and one weekly slot, so
-parallel sections can run labs in the same slot (docs/OVERVIEW.md). Creating a
-course is rejected when the same section already has a course overlapping
-that slot.
+parallel sections can run labs in the same slot as long as they belong
+to different professors (docs/OVERVIEW.md). Creating or editing a course
+is rejected when THIS professor already teaches an overlapping slot in
+the same batch — one person cannot be in two rooms at once.
 """
 from backend.models import db
 
@@ -50,8 +51,8 @@ def get(course_id):
 
 
 def create(course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time):
-    """Create a course; raises ValueError on a schedule clash in the section."""
-    _ensure_no_clash(section_id, day_of_week, start_time, end_time)
+    """Create a course; raises ValueError on a professor double-booking in the batch."""
+    _ensure_professor_free(professor_id, section_id, day_of_week, start_time, end_time)
     return db.execute(
         """INSERT INTO courses
            (course_name, course_code, professor_id, section_id, term,
@@ -61,9 +62,9 @@ def create(course_name, course_code, professor_id, section_id, term, day_of_week
     )
 
 
-def update(course_id, course_name, course_code, section_id, term, day_of_week, start_time, end_time):
-    """Update a course; raises ValueError on a schedule clash in the section."""
-    _ensure_no_clash(section_id, day_of_week, start_time, end_time, exclude_course_id=course_id)
+def update(course_id, course_name, course_code, section_id, term, day_of_week, start_time, end_time, professor_id):
+    """Update a course; raises ValueError on a professor double-booking in the batch."""
+    _ensure_professor_free(professor_id, section_id, day_of_week, start_time, end_time, exclude_course_id=course_id)
     db.execute(
         """UPDATE courses
            SET course_name = %s, course_code = %s, section_id = %s, term = %s,
@@ -96,28 +97,40 @@ WEEKDAYS = {1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday",
             5: "Friday", 6: "Saturday", 7: "Sunday"}
 
 
-def _ensure_no_clash(section_id, day_of_week, start_time, end_time, exclude_course_id=None):
-    """Reject a slot that overlaps another course of the same section.
+def _ensure_professor_free(professor_id, section_id, day_of_week, start_time, end_time, exclude_course_id=None):
+    """Reject a slot this professor already teaches elsewhere in the same batch.
 
-    Two [start, end) intervals overlap when a.start < b.end AND b.start < a.end.
-    Mapping a=existing course, b=new slot gives the WHERE below — note the
-    parameters arrive as (end_time, start_time) in that order. They LOOK
-    swapped; they are not. (And touching an edge exactly — 10:00 ending
-    where 10:00 begins — is allowed, hence strict <.)
+    The rule (scope trim): one professor, one slot, ONE course per batch.
+    Teaching SN1 on Monday 09:00 blocks SN2 on Monday 09:00 for the same
+    professor — but a DIFFERENT professor can still take that SN2 slot,
+    which is exactly what lets parallel sections run labs at the same
+    time. A section is inside its batch, so same-section double-booking
+    is caught too.
+
+    Two [start, end) intervals overlap when a.start < b.end AND
+    b.start < a.end. Mapping a=existing course, b=new slot gives the WHERE
+    below — note the parameters arrive as (end_time, start_time) in that
+    order. They LOOK swapped; they are not. (Touching an edge exactly —
+    10:00 ending where 10:00 begins — is allowed, hence strict <.)
     """
     clash = db.fetch_one(
-        """SELECT course_name FROM courses
-           WHERE section_id = %s AND day_of_week = %s
-             AND start_time < %s AND %s < end_time
-             AND id != %s
+        """SELECT c2.course_name
+           FROM courses c2
+           JOIN sections mine   ON mine.id   = %s
+           JOIN sections theirs ON theirs.id = c2.section_id
+           WHERE c2.professor_id = %s
+             AND theirs.batch_name = mine.batch_name
+             AND c2.id != %s
+             AND c2.day_of_week = %s
+             AND c2.start_time < %s AND %s < c2.end_time
            LIMIT 1""",
-        (section_id, day_of_week, end_time, start_time, exclude_course_id or 0),
+        (section_id, professor_id, exclude_course_id or 0, day_of_week, end_time, start_time),
     )
     if clash:
         # The error names the clashing course — the professor can fix the
         # slot without opening the timetable.
         raise ValueError(
-            f"Schedule clash: section already has '{clash['course_name']}' overlapping this slot."
+            f"Schedule clash: you already teach '{clash['course_name']}' at this time in this batch."
         )
 
 

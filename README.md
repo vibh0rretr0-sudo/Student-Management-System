@@ -103,7 +103,7 @@ Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / 
 
 - Wrote an HTTP server and router from stdlib primitives — status codes, headers, cookies, and redirects stopped being magic.
 - Learned why parameterized SQL matters by doing it everywhere, including a least-privilege DB user instead of running the app as root.
-- Designed a schema to 3NF with real constraints (per-section roll uniqueness, schedule-clash rules, cascade deletes) and an ERD-level understanding of why.
+- Designed a schema to 3NF with real constraints (per-section roll uniqueness, professor double-booking checks, cascade deletes) and an ERD-level understanding of why.
 - Defined a clean Python↔C++ boundary with a text protocol, and a class of bugs it avoids (DB types like MySQL `TIME` arrive as `timedelta` in Python — formatting stays app-side).
 - Hit and fixed real correctness issues: unheld exams unfairly counted as zeros, permission edge cases for freshly created records — the difference between "works on my data" and "works".
 
