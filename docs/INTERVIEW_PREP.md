@@ -188,7 +188,7 @@ Token comparison for passwords uses constant-time `hmac.compare_digest`.
    update; Ishita shows "Fail" at 39.25%.
 4. Attendance → mark someone absent → eligibility summary updates; Kunal at
    exactly 75.0% stays "Eligible" (boundary).
-5. Rankings → per-section ordering, medal for top 3.
+5. Rankings → per-section ordering, podium-colored badge for top 3.
 6. Logout → login as `sharma` → she sees only CS104; open vibhor's student →
    view-only note, no edit/delete; try `/students/6/edit` → 403 page.
 
