@@ -1,7 +1,9 @@
 <!DOCTYPE html>
 <!-- Purpose: shared app shell (sidebar, topbar, aurora, theme toggle).
      Every page renders its inner content through template.page() into
-     {{content}} — one shell, 15 inner pages. -->
+     the content placeholder — one shell, 15 inner pages. NOTE: never
+     write placeholder syntax like double-brace tokens inside comments
+     here; the engine substitutes every occurrence in the file. -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
