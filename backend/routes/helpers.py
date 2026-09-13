@@ -68,6 +68,7 @@ class Request:
     """Parsed view of one HTTP request."""
 
     def __init__(self, method, path, query_string, body, headers):
+        """Parse query/form/cookies up front; handlers get plain dicts."""
         self.method = method
         self.path = path
         self.params = {}  # named groups from the route regex
@@ -98,6 +99,7 @@ class Response:
     """
 
     def __init__(self, status, body, content_type="text/html; charset=utf-8", headers=None):
+        """Store status/body/content-type; str bodies get UTF-8-encoded here."""
         self.status = status
         self.body = body.encode("utf-8") if isinstance(body, str) else body
         self.content_type = content_type
@@ -105,10 +107,12 @@ class Response:
 
     @classmethod
     def html(cls, body, status=200, headers=None):
+        """Full HTML page (or fragment) with the standard content type."""
         return cls(status, body, "text/html; charset=utf-8", headers)
 
     @classmethod
     def redirect(cls, location, headers=None):
+        """303 See Other with a Location header — see the PRG note in the class docstring."""
         # 303 (See Other), not 302: the browser follows it with a GET even
         # after a POST — the Post/Redirect/Get pattern, which is why F5 on
         # a just-saved form never double-submits.
@@ -116,6 +120,7 @@ class Response:
 
 
 def _error_page(request, status, title, message):
+    """Render error.html for a status; falls back to plain HTML if the template itself fails."""
     try:
         body = template.render(
             "error.html",

@@ -14,12 +14,14 @@ from backend.routes.helpers import Response, login_required, route
 @route("GET", "/")
 @login_required
 def index(request):
+    """GET / — redirect to /dashboard."""
     return Response.redirect("/dashboard")
 
 
 @route("GET", "/dashboard")
 @login_required
 def dashboard(request):
+    """GET /dashboard — cards from stats.py, charts from the two builders below."""
     data = stats.dashboard_stats(request.user["id"])
     cards = data["cards"]
     body = template.render(
@@ -39,6 +41,7 @@ def dashboard(request):
 
 
 def _grade_chart_html(bands):
+    """Bar rows per grade band (--w width, --i stagger)."""
     # `or 1` guards the all-zero case: max_count=0 would make every
     # width division a 0/0 -> ZeroDivisionError; with 1, empty bands
     # simply render zero-width bars.
@@ -57,6 +60,7 @@ def _grade_chart_html(bands):
 
 
 def _attendance_chart_html(courses):
+    """Bar rows per course; warn glow + threshold line only below 75%."""
     bars = []
     for i, c in enumerate(courses):
         if c["rate"] is None:

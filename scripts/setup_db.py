@@ -88,6 +88,7 @@ def update_config(app_password):
 
 
 def sms_exists(conn):
+    """True when the `sms` database already exists (drives the drop prompt)."""
     with conn.cursor() as cur:
         cur.execute("SHOW DATABASES LIKE 'sms'")
         return cur.fetchone() is not None
@@ -113,6 +114,7 @@ def run_sql_file(conn, path, label):
 
 
 def main():
+    """The full setup flow: connect as root, user/config, schema, seed."""
     conn = connect_as_root()
 
     if sms_exists(conn):

@@ -18,6 +18,7 @@ from backend.routes.helpers import NotFound, Response, login_required, route
 @route("GET", r"/courses/(?P<course_id>\d+)/grades")
 @login_required
 def course_grades(request):
+    """GET .../grades — C++-computed grades; the owner's visit persists them."""
     course_id = int(request.params["course_id"])
     course = _visible_course(request, course_id)
 
@@ -114,6 +115,7 @@ def rankings(request):
 # ---------- helpers ----------
 
 def _visible_course(request, course_id):
+    """Fetch the course or raise 404 (view-level access: any professor)."""
     course = courses.get(course_id)
     if course is None:
         raise NotFound("That course does not exist.")
@@ -121,10 +123,12 @@ def _visible_course(request, course_id):
 
 
 def _course_title(course):
+    """'CODE — Name', HTML-escaped, for page headers."""
     return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
 def _grade_rows_html(rows):
+    """Grades table rows (component %, final %, Pass/Fail badge)."""
     if not rows:
         return '<tr><td colspan="6" class="empty">No enrolled students.</td></tr>'
     parts = []
@@ -144,6 +148,7 @@ def _grade_rows_html(rows):
 
 
 def _rank_rows_html(rows):
+    """Rank table rows; medals decorate the top three."""
     if not rows:
         return '<tr><td colspan="5" class="empty">No ranking data.</td></tr>'
     parts = []

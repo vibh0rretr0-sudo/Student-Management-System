@@ -19,6 +19,7 @@ from backend.routes.validation import parse_date, require
 @route("GET", "/students")
 @login_required
 def student_list(request):
+    """GET /students — searchable list; viewable by every professor."""
     # Query-string filters. isdigit() is the cheap guard: "abc" as a
     # course id would crash int(); anything non-numeric just means
     # "filter not set".
@@ -43,6 +44,7 @@ def student_list(request):
 @route("GET", "/students/new")
 @login_required
 def student_new_form(request):
+    """GET /students/new — blank form."""
     body = template.render(
         "student_form.html",
         form_title="Add Student",
@@ -61,6 +63,7 @@ def student_new_form(request):
 @route("POST", "/students/new")
 @login_required
 def student_create(request):
+    """POST /students/new — validate, roll-uniqueness check, create, PRG redirect."""
     data = _validated_student(request)
     if students.roll_exists(data["section_id"], data["roll_number"]):
         raise ValueError(f"Roll number '{data['roll_number']}' already exists in this section.")
@@ -71,6 +74,7 @@ def student_create(request):
 @route("GET", r"/students/(?P<student_id>\d+)")
 @login_required
 def student_detail(request):
+    """GET /students/<id> — profile + courses; edit/delete fragments only when can_edit()."""
     student_id = int(request.params["student_id"])
     student = students.get(student_id)
     if student is None:
@@ -96,6 +100,7 @@ def student_detail(request):
 @route("GET", r"/students/(?P<student_id>\d+)/edit")
 @login_required
 def student_edit_form(request):
+    """GET .../edit — permission-gated pre-filled form."""
     student_id = int(request.params["student_id"])
     _require_edit_permission(student_id, request)
     student = students.get(student_id)
@@ -119,6 +124,7 @@ def student_edit_form(request):
 @route("POST", r"/students/(?P<student_id>\d+)/edit")
 @login_required
 def student_update(request):
+    """POST .../edit — same validation as create, with the exclusion id."""
     student_id = int(request.params["student_id"])
     _require_edit_permission(student_id, request)
     data = _validated_student(request)
@@ -131,6 +137,7 @@ def student_update(request):
 @route("POST", r"/students/(?P<student_id>\d+)/delete")
 @login_required
 def student_delete(request):
+    """POST .../delete — permission-gated; enrollments/marks cascade."""
     student_id = int(request.params["student_id"])
     _require_edit_permission(student_id, request)
     students.delete(student_id)
@@ -166,6 +173,7 @@ def _student_rows_html(rows):
 
 
 def _validated_student(request):
+    """Form to create/update kwargs (dates parsed, blanks to None)."""
     # require() raises the friendly 400 listing every missing field at
     # once; the dict below is exactly create()'s/update()'s kwargs.
     require(request.form, "name", "roll_number", "section_id", "enrollment_date")
@@ -186,6 +194,7 @@ def _require_edit_permission(student_id, request):
 
 
 def _not_found(request):
+    """Themed 404 page for unknown student ids."""
     return Response.html(
         template.page(
             request,
@@ -198,6 +207,7 @@ def _not_found(request):
 
 
 def _detail_rows(s):
+    """Key/value rows for the profile table."""
     rows = [
         ("Roll number", s["roll_number"]),
         ("Section", f"{s['section_name']} (batch {s['batch_name']})"),
@@ -212,6 +222,7 @@ def _detail_rows(s):
 
 
 def _enrolled_courses_html(student_id):
+    """Course-link list, or the 'not enrolled' empty state."""
     items = students.enrolled_courses(student_id)
     if not items:
         return '<p class="empty">Not enrolled in any course yet.</p>'

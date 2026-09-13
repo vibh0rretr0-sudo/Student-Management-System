@@ -11,6 +11,7 @@ from backend.routes.validation import parse_date
 @route("GET", r"/courses/(?P<course_id>\d+)/attendance")
 @login_required
 def attendance_page(request):
+    """GET .../attendance — marking sheet for ?date= (default today) + C++ eligibility summary."""
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
 
@@ -49,6 +50,7 @@ def attendance_page(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/attendance")
 @login_required
 def attendance_save(request):
+    """POST .../attendance — whitelist-filtered upsert of one session's marks."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     date = parse_date(request.form.get("date"), "Date")
@@ -79,6 +81,7 @@ def attendance_save(request):
 # ---------- helpers ----------
 
 def _owned_course(request, course_id):
+    """404/403 gate: exists? yours? (mirrors the other route modules)."""
     course = courses.get(course_id)
     if course is None:
         raise NotFound("That course does not exist.")
@@ -88,10 +91,12 @@ def _owned_course(request, course_id):
 
 
 def _course_title(course):
+    """'CODE — Name', HTML-escaped, for page headers."""
     return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
 def _marking_rows_html(rows):
+    """Radio rows for the marking sheet; NULL status leaves both unchecked."""
     if not rows:
         return '<tr><td colspan="4" class="empty">No students enrolled yet.</td></tr>'
     out = []
@@ -117,6 +122,7 @@ def _marking_rows_html(rows):
 
 
 def _summary_html(engine_rows):
+    """Eligibility table from C++ output (empty fragment when the engine failed)."""
     if engine_rows is None:
         return ""
     if not engine_rows:
@@ -141,6 +147,7 @@ def _summary_html(engine_rows):
 
 
 def _date_links(course_id, dates):
+    """Chips linking to past sessions (newest first, last 10)."""
     if not dates:
         return ""
     links = [

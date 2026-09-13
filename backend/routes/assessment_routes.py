@@ -20,6 +20,7 @@ from backend.routes.validation import parse_date, parse_decimal, require
 @route("GET", r"/courses/(?P<course_id>\d+)/assignments")
 @login_required
 def assignments_page(request):
+    """GET .../assignments — assignment list plus one marks grid per assignment."""
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
     rows = assessments.list_assignments(course_id)
@@ -38,6 +39,7 @@ def assignments_page(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/assignments/new")
 @login_required
 def assignment_create(request):
+    """POST .../assignments/new — validated by _validated_assignment."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     data = _validated_assignment(request)
@@ -48,6 +50,7 @@ def assignment_create(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/assignments/(?P<assignment_id>\d+)/delete")
 @login_required
 def assignment_delete(request):
+    """POST .../assignments/<id>/delete — child-of-course check before delete."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     assignment = assessments.get_assignment(int(request.params["assignment_id"]))
@@ -62,6 +65,7 @@ def assignment_delete(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/assignments/(?P<assignment_id>\d+)/marks")
 @login_required
 def assignment_marks_save(request):
+    """POST .../assignments/<id>/marks — upsert every non-blank grid row."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     assignment = assessments.get_assignment(int(request.params["assignment_id"]))
@@ -75,6 +79,7 @@ def assignment_marks_save(request):
 @route("GET", r"/courses/(?P<course_id>\d+)/exams")
 @login_required
 def exams_page(request):
+    """GET .../exams — exam list plus one marks grid per exam."""
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
     rows = assessments.list_exams(course_id)
@@ -93,6 +98,7 @@ def exams_page(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/exams/new")
 @login_required
 def exam_create(request):
+    """POST .../exams/new — validated by _validated_exam."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     data = _validated_exam(request)
@@ -103,6 +109,7 @@ def exam_create(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/exams/(?P<exam_id>\d+)/delete")
 @login_required
 def exam_delete(request):
+    """POST .../exams/<id>/delete — child-of-course check before delete."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     exam = assessments.get_exam(int(request.params["exam_id"]))
@@ -115,6 +122,7 @@ def exam_delete(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/exams/(?P<exam_id>\d+)/marks")
 @login_required
 def exam_marks_save(request):
+    """POST .../exams/<id>/marks — upsert every non-blank grid row."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     exam = assessments.get_exam(int(request.params["exam_id"]))
@@ -128,6 +136,7 @@ def exam_marks_save(request):
 # ---------- helpers ----------
 
 def _owned_course(request, course_id):
+    """404/403 gate for every mutating handler in this module."""
     course = courses.get(course_id)
     if course is None:
         raise NotFound("That course does not exist.")
@@ -137,6 +146,7 @@ def _owned_course(request, course_id):
 
 
 def _course_title(course):
+    """'CODE — Name', HTML-escaped, for page headers."""
     return template.esc(f"{course['course_code']} — {course['course_name']}")
 
 
@@ -165,6 +175,7 @@ def _parse_marks(request, course_id, max_marks):
 
 
 def _assignment_rows_html(rows, course_id):
+    """Assignment table rows; 'Enter marks' deep-links to #marks-<id>."""
     if not rows:
         return '<tr><td colspan="5" class="empty">No assignments yet.</td></tr>'
     out = []
@@ -187,6 +198,7 @@ def _assignment_rows_html(rows, course_id):
 
 
 def _exam_rows_html(rows, course_id):
+    """Exam table rows; same anchor pattern as assignments."""
     if not rows:
         return '<tr><td colspan="4" class="empty">No exams yet.</td></tr>'
     out = []
@@ -256,6 +268,7 @@ def _exam_marks_tables_html(course_id, exams):
 
 
 def _marks_block(course_id, anchor, title, max_marks, action, rows, with_submitted, block_index=0):
+    """One marks-entry table wrapped in its own form (shared by both pages)."""
     # anchor (id="marks-N") is what the 'Enter marks' buttons deep-link to
     # via #marks-N — pure HTML fragment navigation, no JS.
     head = "<th>Submitted on</th>" if with_submitted else ""
@@ -274,6 +287,7 @@ def _marks_block(course_id, anchor, title, max_marks, action, rows, with_submitt
 
 
 def _validated_assignment(request):
+    """Form to create/update kwargs; max_marks bounded 0.5..1000."""
     require(request.form, "title", "max_marks")
     return {
         "title": request.form["title"].strip(),
@@ -285,6 +299,7 @@ def _validated_assignment(request):
 
 
 def _validated_exam(request):
+    """Form to create/update kwargs; max_marks bounded 0.5..1000."""
     require(request.form, "title", "max_marks")
     return {
         "title": request.form["title"].strip(),

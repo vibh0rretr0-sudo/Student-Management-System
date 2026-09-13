@@ -15,6 +15,7 @@ from backend.routes.validation import parse_date, parse_int, parse_time, require
 @route("GET", "/courses")
 @login_required
 def course_list(request):
+    """GET /courses — the professor's own courses only (scoped in the model)."""
     rows = courses.list_for_professor(request.user["id"])
     body = template.render("courses.html", rows=_course_rows_html(rows))
     return Response.html(template.page(request, "My Courses", body, active="courses"))
@@ -23,6 +24,7 @@ def course_list(request):
 @route("GET", "/courses/new")
 @login_required
 def course_new_form(request):
+    """GET /courses/new — blank form (term defaults to 'Sem 1')."""
     body = _course_form(request, form_title="Add Course", action="/courses/new",
                         values=_blank_course_values(), cancel_link="/courses")
     return Response.html(template.page(request, "Add Course", body, active="courses"))
@@ -31,6 +33,7 @@ def course_new_form(request):
 @route("POST", "/courses/new")
 @login_required
 def course_create(request):
+    """POST /courses/new — session supplies professor_id; clash check inside the model."""
     # professor_id comes from the SESSION, never from the form — clients
     # can post arbitrary fields, but ownership is decided server-side.
     data = _validated_course(request)
@@ -41,6 +44,7 @@ def course_create(request):
 @route("GET", r"/courses/(?P<course_id>\d+)")
 @login_required
 def course_detail(request):
+    """GET /courses/<id> — read-only hub for all, management sections for the owner."""
     course_id = int(request.params["course_id"])
     course = courses.get(course_id)
     if course is None:
@@ -64,6 +68,7 @@ def course_detail(request):
 @route("GET", r"/courses/(?P<course_id>\d+)/edit")
 @login_required
 def course_edit_form(request):
+    """GET .../edit — pre-filled form, owner-gated via _owned_course."""
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
     values = {
@@ -84,6 +89,7 @@ def course_edit_form(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/edit")
 @login_required
 def course_update(request):
+    """POST .../edit — validated + clash-checked, then PRG redirect."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     data = _validated_course(request)
@@ -94,6 +100,7 @@ def course_update(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/delete")
 @login_required
 def course_delete(request):
+    """POST .../delete — owner-only; children cascade in the schema."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     courses.delete(course_id)
@@ -103,6 +110,7 @@ def course_delete(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/enroll")
 @login_required
 def enroll_student(request):
+    """POST .../enroll — enrollment date defaults to today."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     student_id = parse_int(request.form.get("student_id"), "student", minimum=1)
@@ -114,6 +122,7 @@ def enroll_student(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/unenroll")
 @login_required
 def unenroll_student(request):
+    """POST .../unenroll — removes enrollment; marks/attendance cascade."""
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     student_id = parse_int(request.form.get("student_id"), "student", minimum=1)
@@ -124,6 +133,7 @@ def unenroll_student(request):
 # ---------- helpers ----------
 
 def _owned_course(request, course_id):
+    """404/403 gate shared by every mutating handler."""
     course = courses.get(course_id)
     if course is None:
         raise NotFound("That course does not exist.")
@@ -133,6 +143,7 @@ def _owned_course(request, course_id):
 
 
 def _validated_course(request):
+    """Form to create/update kwargs with int/time normalization."""
     require(request.form, "course_name", "course_code", "section_id", "term",
             "day_of_week", "start_time", "end_time")
     return {
@@ -147,12 +158,14 @@ def _validated_course(request):
 
 
 def _today():
+    """Today's date (local) — the default enrollment date."""
     import datetime
 
     return datetime.date.today()
 
 
 def _blank_course_values():
+    """Empty form state for the add-course page."""
     return {
         "name": "",
         "code": "",
@@ -165,6 +178,7 @@ def _blank_course_values():
 
 
 def _course_form(request, form_title, action, values, cancel_link):
+    """Render course_form.html from a values dict (shared by new/edit)."""
     return template.render(
         "course_form.html",
         form_title=form_title,
@@ -193,6 +207,7 @@ def _section_options(selected=""):
 
 
 def _day_options(selected=None):
+    """Weekday <option> list, honoring the selected day."""
     options = []
     for number, name in courses.WEEKDAYS.items():
         sel = " selected" if selected == number else ""
@@ -237,6 +252,7 @@ def _course_rows_html(rows):
 
 
 def _course_info_rows(c):
+    """Detail-page key/value rows (code, section, term, schedule, professor)."""
     slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
     rows = [
         ("Code", c["course_code"]),
@@ -252,6 +268,7 @@ def _course_info_rows(c):
 
 
 def _enrolled_rows_html(enrolled, course_id, is_owner):
+    """Roster rows; owners also get per-student unenroll buttons."""
     if not enrolled:
         return '<tr><td colspan="4" class="empty">No students enrolled yet.</td></tr>'
     out = []
@@ -275,6 +292,7 @@ def _enrolled_rows_html(enrolled, course_id, is_owner):
 
 
 def _enroll_section_html(course_id, enrollable):
+    """Owner-only enroll dropdown of section students not yet enrolled."""
     if not enrollable:
         return "<p class=\"empty\">Every student in this section is already enrolled.</p>"
     options = "".join(
@@ -290,6 +308,7 @@ def _enroll_section_html(course_id, enrollable):
 
 
 def _owner_links_html(course_id):
+    """The owner's action-button row (marks, attendance, grades, rank, edit)."""
     return (
         f"<a class=\"btn\" href=\"/courses/{course_id}/assignments\">Assignments &amp; marks</a> "
         f"<a class=\"btn\" href=\"/courses/{course_id}/exams\">Exams &amp; marks</a> "
@@ -313,6 +332,7 @@ def _course_delete_form_html(course, course_id):
 
 
 def _course_not_found(request):
+    """Themed 404 page (template-wrapped, not the bare error)."""
     return Response.html(
         template.page(
             request, "Not found",
