@@ -9,13 +9,19 @@ HOST = "127.0.0.1"
 PORT = 8000
 
 # --- MySQL connection ---
+# Least-privilege by design (viva answer): sms_app can touch ONLY the
+# `sms` database. Even if the app were fully compromised, the damage is
+# capped at one schema — no root, no other databases.
 DB_HOST = "127.0.0.1"
 DB_PORT = 3306
 DB_USER = "sms_app"          # dedicated least-privilege user created by scripts/setup_db.py
 DB_PASSWORD = "CHANGE_ME"    # <-- set the password you chose for sms_app during setup
 DB_NAME = "sms"
 
-# --- Paths (relative to project root) ---
+# --- Paths ---
+# BASE_DIR anchors every path to the repo root so the app runs from any
+# working directory; config.py (with your real password) is git-ignored —
+# this example file is what a fresh checkout copies from.
 import os
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
