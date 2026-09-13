@@ -658,4 +658,17 @@ button.btn { font-family: inherit; }
   .bar-label { text-align: left; }
   .content { padding: 1.1rem 1rem 2.4rem; }
   .topbar { padding: .75rem 1rem; }
+
+  /* Wide tables scroll INSIDE their panel instead of stretching the
+     page sideways (the classic mobile data-table pattern). display:block
+     turns the table into a scrollable box while width:100% keeps it
+     filling the card when content fits. Columns keep nowrap so cells
+     stay readable — you swipe, not squint. */
+  .data-table, .detail-table {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .data-table th, .data-table td { white-space: nowrap; }
+  .marks-input, .date-input { width: 72px; }
 }
