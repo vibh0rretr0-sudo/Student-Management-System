@@ -1,6 +1,13 @@
 """Compile the C++ engine (sms_engine) with warnings enabled (Rules.md §3).
 
 Run:  python scripts/build_cpp.py
+
+The flags tell the whole story: -Wall -Wextra surface sloppy code, -O2
+because the engine does arithmetic in loops, -std=c++14 for the modern
+basics without bleeding-edge requirements. Warnings are printed and the
+build is expected to stay warning-free (the project rule is 'enable and
+fix', not '-Werror' — a deliberate choice so a future portability
+warning can't hard-block a demo rebuild).
 """
 
 import shutil
@@ -11,6 +18,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SRC = ROOT / "cpp_module" / "src" / "sms_engine.cpp"
 BUILD_DIR = ROOT / "cpp_module" / "build"
+# The .exe suffix is the only Windows/Mac difference — config.py points
+# at the same relative path on every OS.
 OUT_NAME = "sms_engine.exe" if sys.platform == "win32" else "sms_engine"
 OUT = BUILD_DIR / OUT_NAME
 
@@ -41,7 +50,8 @@ def main():
     if result.stdout.strip():
         print(result.stdout.strip())
     if result.stderr.strip():
-        print(result.stderr.strip())  # compiler warnings appear here — fix them
+        # gcc writes WARNINGS here (not stdout) — visible but non-fatal.
+        print(result.stderr.strip())
 
     if result.returncode != 0:
         sys.exit(f"Compilation failed (exit code {result.returncode}).")
