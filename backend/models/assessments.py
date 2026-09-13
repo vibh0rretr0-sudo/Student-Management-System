@@ -2,6 +2,12 @@
 
 Grading scheme (confirmed): final % = 50% assignment average + 50% exam
 average; missing marks count as 0; Pass at >= 40%.
+
+The key modeling decision: every mark is normalized to a PERCENTAGE
+(marks / max_marks * 100) the moment it's aggregated. An 18/20 assignment
+and a 70/100 exam become 90 and 70 — directly blendable at 50/50 no
+matter what each assessment's max was. The engine receives (sum of
+percentages, count) pairs and does the rest.
 """
 from backend.models import db
 
@@ -72,6 +78,9 @@ def delete_exam(exam_id):
 
 
 # ---------- Marks (upserts; marks-vs-max validated in the route layer) ----------
+# Same MySQL 8.0.19+ `AS new` row-alias upserts as attendance.mark_day —
+# re-entering marks overwrites cleanly instead of erroring on the
+# UNIQUE(assessment, student) keys.
 
 def get_submissions(assignment_id):
     """{student_id: {'marks': ..., 'submitted_on': ...}} for one assignment."""
@@ -159,6 +168,12 @@ def course_grade_inputs(course_id):
             JOIN assignments a ON a.id = sub.assignment_id
             GROUP BY sub.student_id, a.course_id
         ) ag ON ag.sid = e.student_id AND ag.cid = e.course_id
+        # The shape of this query (viva answer): two CROSS JOINs supply
+        # the COURSE-WIDE denominators (conducted assessments — same for
+        # every student), two LEFT JOINs supply each student's SUM of
+        # percentages (0 when they have no marks: COALESCE). Splitting
+        # numerator-side from denominator-side is what keeps 'missing = 0'
+        # and the 'conducted' rule from entangling.
         LEFT JOIN (
             SELECT em.student_id AS sid, x.course_id AS cid,
                    SUM(em.marks_obtained / x.max_marks * 100) AS exam_sum

@@ -6,6 +6,8 @@ courses.
 """
 from backend.models import db
 
+# Shared JOIN so every listing carries section + batch names — one
+# definition keeps SELECT columns consistent across get/search.
 _BASE_SELECT = """
 SELECT s.id, s.name, s.roll_number, s.date_of_birth, s.contact,
        s.enrollment_date, s.section_id, sec.section_name, b.batch_name
@@ -47,12 +49,21 @@ def delete(student_id):
 
 
 def roll_exists(section_id, roll_number, exclude_student_id=None):
-    """True when another student in the section already uses this roll number."""
+    """True when another student in the section already uses this roll number.
+
+    The exclusion trick (viva answer): the UNIQUE(section_id, roll_number)
+    constraint also exists in the schema, but the form needs a friendly
+    message BEFORE hitting the DB. `id != exclude` keeps 'saving an edit
+    without changing the roll number' from colliding with itself — the
+    `or 0` default can never match a real id, which makes the check a
+    pure existence test for new students.
+    """
     row = db.fetch_one(
         """SELECT 1 AS ok FROM students
            WHERE section_id = %s AND roll_number = %s AND id != %s LIMIT 1""",
         (section_id, roll_number, exclude_student_id or 0),
     )
+    # LIMIT 1 + SELECT 1: stop at the first hit; we want a boolean, not rows.
     return row is not None
 
 
@@ -64,6 +75,8 @@ def search(query=None, course_id=None, section_id=None):
 
     if query:
         where.append("(s.name LIKE %s OR s.roll_number LIKE %s)")
+        # %...% wraps the USER's text, but the text itself is still bound
+        # as data — the LIKE wildcards are ours, the payload is theirs.
         like = f"%{query.strip()}%"
         params += [like, like]
     if course_id:
@@ -75,6 +88,8 @@ def search(query=None, course_id=None, section_id=None):
         where.append("s.section_id = %s")
         params.append(section_id)
 
+    # WHERE clauses are built from FIXED strings; only values go into
+    # params — dynamic filtering without dynamic SQL injection surface.
     if where:
         sql += "WHERE " + " AND ".join(where)
     sql += " ORDER BY sec.section_name, s.roll_number"
