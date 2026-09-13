@@ -3,7 +3,9 @@
 How the interface is built and *why*, in the language you can reuse in a viva
 or interview. Everything below lives in **one stylesheet**
 (`frontend/static/css/style.css`) and runs with **zero JavaScript** — the
-project's framework-free rule turned into a design discipline.
+project's framework-free rule turned into a design discipline. For a guided
+path through the whole codebase (not just the UI), see the
+[`CODE_TOUR.md`](CODE_TOUR.md).
 
 ---
 
