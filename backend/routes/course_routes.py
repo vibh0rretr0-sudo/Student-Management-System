@@ -1,4 +1,11 @@
-"""Course management: list, create, edit, delete, enrollment."""
+"""Course management: list, create, edit, delete, enrollment.
+
+Ownership in one helper: every mutating handler calls _owned_course(),
+which answers BOTH 'does this course exist?' (404) and 'is it yours?'
+(403) before any model write happens. The detail page instead does a
+soft check (is_owner) so non-owners get a read-only view rather than an
+error — two deliberate flavors of the same rule.
+"""
 from backend.models import courses
 from backend.routes import template
 from backend.routes.helpers import NotFound, Response, login_required, route
@@ -24,6 +31,8 @@ def course_new_form(request):
 @route("POST", "/courses/new")
 @login_required
 def course_create(request):
+    # professor_id comes from the SESSION, never from the form — clients
+    # can post arbitrary fields, but ownership is decided server-side.
     data = _validated_course(request)
     courses.create(professor_id=request.user["id"], **data)
     return Response.redirect("/courses")
@@ -192,7 +201,12 @@ def _day_options(selected=None):
 
 
 def _fmt_time(value):
-    """MySQL TIME columns arrive as datetime.timedelta via PyMySQL; format HH:MM."""
+    """MySQL TIME columns arrive as datetime.timedelta via PyMySQL; format HH:MM.
+
+    (A TIME '09:30:00' comes back as timedelta(hours=9, minutes=30) — a
+    classic PyMySQL surprise. The divmod converts; the str branch keeps
+    form round-trips simple when the value never touched the DB.)
+    """
     if isinstance(value, str):
         return value[:5]
     total_seconds = int(value.total_seconds())
@@ -202,6 +216,8 @@ def _fmt_time(value):
 
 
 def _course_rows_html(rows):
+    """Table rows for 'My Courses' — the model already scoped to the
+    professor, so this builder renders exactly what it's given."""
     if not rows:
         return '<tr><td colspan="6" class="empty">No courses yet — add your first one.</td></tr>'
     out = []

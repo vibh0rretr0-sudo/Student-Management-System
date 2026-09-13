@@ -1,4 +1,11 @@
-"""Dashboard: summary cards + two CSS-only bar charts (no JavaScript)."""
+"""Dashboard: summary cards + two CSS-only bar charts (no JavaScript).
+
+The chart trick (the showpiece answer): a bar is just a div whose width
+is set via the CSS custom property --w (style="--w:62.5%"); the
+stylesheet animates that property to full width on load. Python's only
+job is computing the numbers — presentation lives entirely in CSS.
+The --i index drives the staggered entrance animation the same way.
+"""
 from backend.models import stats
 from backend.routes import template
 from backend.routes.helpers import Response, login_required, route
@@ -20,6 +27,8 @@ def dashboard(request):
         total_students=cards["total_students"],
         my_courses=cards["my_courses"],
         my_students=cards["my_students"],
+        # None -> em dash: 'no data yet' is a DIFFERENT fact than 0.0%,
+        # and the dashboard refuses to blur that distinction.
         avg_attendance=cards["avg_attendance"] if cards["avg_attendance"] is not None else "—",
         avg_grade=cards["avg_grade"] if cards["avg_grade"] is not None else "—",
         pass_rate=cards["pass_rate"] if cards["pass_rate"] is not None else "—",
@@ -30,6 +39,9 @@ def dashboard(request):
 
 
 def _grade_chart_html(bands):
+    # `or 1` guards the all-zero case: max_count=0 would make every
+    # width division a 0/0 -> ZeroDivisionError; with 1, empty bands
+    # simply render zero-width bars.
     max_count = max((b["count"] for b in bands), default=0) or 1
     bars = []
     for i, b in enumerate(bands):
@@ -54,9 +66,11 @@ def _attendance_chart_html(courses):
             )
             continue
         width = round(c["rate"], 1)
+        # Two visual signals for 'below the line', both server-decided:
+        # the warm warn glow on the fill, and the dashed 75%-line marker
+        # on the track — only rendered when the bar is actually BELOW
+        # the cutoff (on at-or-above bars it would just peek past the tip).
         css_class = "bar-fill warn" if c["rate"] < 75 else "bar-fill"
-        # The dashed 75%-line marker only belongs on bars that fall BELOW the
-        # cutoff: on at-or-above bars it would just peek past the bar tip.
         track_class = "bar-track threshold" if c["rate"] < 75 else "bar-track"
         bars.append(
             f'<div class="bar-row" style="--i:{i}"><span class="bar-label">{template.esc(c["label"])}</span>'

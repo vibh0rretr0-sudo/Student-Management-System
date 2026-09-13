@@ -14,11 +14,17 @@ def attendance_page(request):
     course_id = int(request.params["course_id"])
     course = _owned_course(request, course_id)
 
+    # ?date=YYYY-MM-DD reviews a past session; absent -> today. One URL
+    # serves both 'mark now' and 're-mark/review' — the date chips at the
+    # bottom of the page are just links back to this same route.
     date = parse_date(request.query.get("date"), "Date") or datetime.date.today()
     rows = attendance.get_day(course_id, date)
     marked = attendance.session_count(course_id)
 
     try:
+        # marked = total distinct sessions; the engine divides present/
+        # sessions per student. Eligibility is INCLUSIVE at 75.0% —
+        # exactly 6/8 makes the cut (fixture-verified).
         engine_rows = cpp_engine.compute_attendance(marked, attendance.course_attendance_counts(course_id)["students"])
     except cpp_engine.EngineError as exc:
         engine_rows = None
@@ -49,6 +55,8 @@ def attendance_save(request):
     if date is None:
         raise ValueError("Pick a date before saving attendance.")
 
+    # status_<sid>=present|absent per student. The whitelist check below
+    # drops anything else — a tampered radio value simply doesn't count.
     statuses = {}
     for key, value in request.form.items():
         if key.startswith("status_"):
@@ -58,6 +66,7 @@ def attendance_save(request):
     if not statuses:
         raise ValueError("No attendance marks were submitted.")
 
+    # Same enrollment guard as the marks grid: only roster ids accepted.
     enrolled_ids = {s["id"] for s in courses.list_enrolled(course_id)}
     unknown = set(statuses) - enrolled_ids
     if unknown:
@@ -88,6 +97,9 @@ def _marking_rows_html(rows):
     out = []
     for i, r in enumerate(rows):
         status = r["status"]
+        # Pre-checked radios only when a value exists; NULL status (never
+        # marked) leaves both empty, which the server then REJECTS on
+        # save — everyone must be marked explicitly.
         present_checked = "checked" if status == "present" else ""
         absent_checked = "checked" if status == "absent" else ""
         out.append(

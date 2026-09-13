@@ -2,7 +2,13 @@
 
 Permission model (confirmed): all professors can view every student;
 editing/deleting requires the student to be enrolled in one of the
-professor's own courses.
+professor's own courses (the check itself lives in
+students.can_edit() — this module just raises the 403 via
+_require_edit_permission, so no handler re-implements the rule).
+
+The create/edit pair shares one validator (_validated_student) and one
+uniqueness guard (roll_exists) — the only difference between the two
+flows is the exclusion id. That's the DRY shape worth pointing at.
 """
 from backend.models import courses, students
 from backend.routes import template
@@ -13,6 +19,9 @@ from backend.routes.validation import parse_date, require
 @route("GET", "/students")
 @login_required
 def student_list(request):
+    # Query-string filters. isdigit() is the cheap guard: "abc" as a
+    # course id would crash int(); anything non-numeric just means
+    # "filter not set".
     query = request.query.get("q", "").strip()
     course_id = request.query.get("course_id", "").strip()
     section_id = request.query.get("section_id", "").strip()
@@ -71,6 +80,10 @@ def student_detail(request):
         "student_detail.html",
         student_rows=_detail_rows(student),
         courses_html=_enrolled_courses_html(student_id),
+        # Conditional fragments: '' hides a block entirely; the template
+        # just substitutes what it's given. can_edit was already checked
+        # ABOVE — hiding UI here is convenience, the real gate is that
+        # GET .../edit and POST .../edit re-verify server-side.
         edit_link=f"<a class=\"btn\" href=\"/students/{student_id}/edit\">Edit</a>" if can_edit else "",
         delete_form=_delete_form_html(student_id, student["name"]) if can_edit else "",
         no_edit_note="" if can_edit else
@@ -128,7 +141,12 @@ def student_delete(request):
 
 def _student_rows_html(rows):
     """Table rows for the students list. Any professor can view every
-    student; the Edit link leads to a form that enforces edit rights."""
+    student; the Edit link leads to a form that enforces edit rights.
+
+    (The link is deliberately shown to everyone — one rule, one place.
+    Hiding it per-viewer would duplicate can_edit logic in a second
+    function for zero security gain, since the server re-checks.)
+    """
     if not rows:
         return '<tr><td colspan="6" class="empty">No students match.</td></tr>'
     out = []
@@ -148,6 +166,8 @@ def _student_rows_html(rows):
 
 
 def _validated_student(request):
+    # require() raises the friendly 400 listing every missing field at
+    # once; the dict below is exactly create()'s/update()'s kwargs.
     require(request.form, "name", "roll_number", "section_id", "enrollment_date")
     return {
         "name": request.form["name"].strip(),
@@ -160,6 +180,7 @@ def _validated_student(request):
 
 
 def _require_edit_permission(student_id, request):
+    """Raise the standard 403 unless can_edit() passes."""
     if not students.can_edit(student_id, request.user["id"]):
         raise PermissionError("You can only edit students enrolled in your own courses.")
 
@@ -238,6 +259,9 @@ def _section_choices(selected=""):
 
 def _delete_form_html(student_id, name):
     """Two-step, JavaScript-free delete confirmation via <details>."""
+    # <details> gives click-to-reveal natively in HTML — the confirm step
+    # costs zero JS and the destructive button stays out of tab order
+    # until deliberately revealed.
     return (
         "<details class=\"danger-zone\">"
         "<summary>Delete this student…</summary>"
