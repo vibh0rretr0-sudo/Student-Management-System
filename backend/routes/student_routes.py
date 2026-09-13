@@ -13,7 +13,7 @@ flows is the exclusion id. That's the DRY shape worth pointing at.
 from backend.models import courses, students
 from backend.routes import template
 from backend.routes.helpers import Response, login_required, route
-from backend.routes.validation import parse_date, require
+from backend.routes.validation import parse_date, parse_int, require
 
 
 @route("GET", "/students")
@@ -180,7 +180,9 @@ def _validated_student(request):
     return {
         "name": request.form["name"].strip(),
         "roll_number": request.form["roll_number"].strip(),
-        "section_id": int(request.form["section_id"]),
+        # parse_int, not bare int(): a tampered form value becomes a
+        # friendly 400 instead of a 500 (same rule as every other form).
+        "section_id": parse_int(request.form["section_id"], "section", minimum=1),
         "enrollment_date": parse_date(request.form.get("enrollment_date"), "Enrollment date"),
         "date_of_birth": parse_date(request.form.get("date_of_birth"), "Date of birth"),
         "contact": request.form.get("contact", "").strip() or None,
