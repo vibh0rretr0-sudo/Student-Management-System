@@ -4,6 +4,12 @@ A Student Management System for professors: courses, enrollments, students, assi
 
 > Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a beginner-friendly [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) (how a click becomes a page — no programming knowledge needed), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 
+## How it works — in one picture
+
+![How the app works: from your click to the page you see, in seven plain-language steps](docs/flow-diagram.png)
+
+*No programming knowledge needed — ① your click → ② front desk → ③ sorting office → ④ filing cabinet / ⑤ calculator → ⑥ printing press → ⑦ the page. The full walkthrough (beginner and code-level views) is in [`docs/FLOWCHART.md`](docs/FLOWCHART.md).*
+
 ## Why this project
 
 Most first-semester projects hide behind a framework. This one doesn't: routing, form parsing, sessions, password hashing, HTML templating, and even the dashboard charts are written from scratch — so every line can be explained in a viva or interview. The C++ module is scoped to exactly three computations (grades, attendance eligibility, ranking) so there's a crisp answer to *"why C++ here?"*.
@@ -12,17 +18,17 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 
 | Layer | Technology | Role |
 |---|---|---|
-| Frontend | HTML, CSS | 15 semantic templates, one stylesheet, CSS-only charts, zero JS |
+| Frontend | HTML, CSS | 16 semantic templates, one stylesheet, CSS-only charts, zero JS |
 | Backend | Python (stdlib `http.server`) | Regex routing, form parsing, PBKDF2 auth, sessions, validation |
 | Compute | C++ (`sms_engine`) | Grade %, attendance eligibility, section ranking — via subprocess |
-| Data | SQL on MySQL 8 | 12 tables, 3NF, parameterized queries via PyMySQL |
+| Data | SQL on MySQL 8 | 9 tables, 3NF, parameterized queries via PyMySQL |
 
 ## Features
 
 - Professor login/logout — PBKDF2-salted passwords, in-memory sessions, HttpOnly cookies
 - Per-professor scoping — every professor sees all students, but only **course owners** can modify; enforced server-side (403), not just hidden in the UI
 - Student CRUD with search/filters (name, roll, course, section) and per-section roll-number uniqueness
-- Courses tied to one professor + one section + one weekly slot, with **schedule-clash detection** so parallel sections (SN1/SN2) can run labs simultaneously
+- Courses tied to one professor + one section + one weekly slot, with **professor double-booking prevention** — one professor can't hold two overlapping slots in the same batch, while different professors can still run parallel-section (SN1/SN2) labs simultaneously
 - Assignments & exams with per-student marks-entry grids (marks validated against max)
 - **Grades via C++**: final % = 50% assignments + 50% exams (only *conducted* assessments count), Pass ≥ 40%
 - **Attendance via C++**: per-course %, hard 75% eligibility cutoff, marked per session date
@@ -45,7 +51,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
             │ subprocess (TSV over stdin/stdout)
 ┌───────────▼─────────────┐      ┌──────────────────────┐
 │  C++ sms_engine         │      │  Data (MySQL 8)      │
-│  grades|attendance|rank │      │  12 tables, 3NF      │
+│  grades|attendance|rank │      │  9 tables, 3NF       │
 └─────────────────────────┘      └──────────────────────┘
 ```
 
