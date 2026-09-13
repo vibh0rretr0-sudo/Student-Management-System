@@ -13,6 +13,9 @@
    meaning; animations are driven by inline custom properties
    (--i stagger index, --n count-up integer, --w bar width) that the
    templates render server-side. No JS anywhere.
+
+   Full walkthrough of every technique, in interview language:
+   docs/UI_GUIDE.md
    ============================================================ */
 
 /* ---------- 1. tokens: light theme (default) ---------- */
