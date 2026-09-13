@@ -89,11 +89,14 @@ def course_edit_form(request):
 @route("POST", r"/courses/(?P<course_id>\d+)/edit")
 @login_required
 def course_update(request):
-    """POST .../edit — validated + clash-checked, then PRG redirect."""
+    """POST .../edit — validated + double-booking checked, then PRG redirect."""
     course_id = int(request.params["course_id"])
-    _owned_course(request, course_id)
+    # A course never changes owner, and _owned_course() has already proven
+    # the session user IS the owner — so the existing professor_id is both
+    # correct and the only value worth passing to the clash check.
+    course = _owned_course(request, course_id)
     data = _validated_course(request)
-    courses.update(course_id, **data)
+    courses.update(course_id, professor_id=course["professor_id"], **data)
     return Response.redirect(f"/courses/{course_id}")
 
 
