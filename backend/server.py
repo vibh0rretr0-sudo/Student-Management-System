@@ -39,15 +39,19 @@ class SMSHandler(BaseHTTPRequestHandler):
     server_version = "SMSServer/1.0"
 
     def do_GET(self):
+        """Route GET requests into the shared handler."""
         self._handle()
 
     def do_POST(self):
+        """Route POST requests into the shared handler."""
         self._handle()
 
     def do_HEAD(self):
+        """HEAD handled like GET minus the body (in _send)."""
         self._handle()
 
     def _handle(self):
+        """One request's full journey: parse, dispatch, send — with hard failure catchers."""
         # One try/except wraps the whole exchange: malformed input becomes
         # a plain 400/413 instead of an empty reply, and dispatch()'s own
         # error mapping turns handler exceptions into friendly pages.
@@ -63,6 +67,7 @@ class SMSHandler(BaseHTTPRequestHandler):
         self._send(dispatch(request))
 
     def _build_request(self):
+        """Raw socket data to Request (path, query, form, cookies)."""
         # urlsplit separates ?query from the path; unquote() then percent-
         # decodes ONLY the path (e.g. /students/6), leaving ?a=b&c=d intact
         # for the handler to parse.
@@ -82,6 +87,7 @@ class SMSHandler(BaseHTTPRequestHandler):
         )
 
     def _send(self, response):
+        """Write status line, headers, and body back to the client."""
         # Content-Length + no keep-alive trickery: one clean response per
         # connection keeps the client logic trivially correct.
         self.send_response(response.status)
@@ -94,6 +100,7 @@ class SMSHandler(BaseHTTPRequestHandler):
             self.wfile.write(response.body)
 
     def log_message(self, fmt, *args):
+        """Per-request access log line (stdout; redirected when run detached)."""
         # BaseHTTPRequestHandler calls this per request; printing to stdout
         # (redirected to a log file when run detached) gives a free audit trail.
         print(f"{self.address_string()} {fmt % args}")
@@ -104,12 +111,14 @@ class _BodyTooLarge(Exception):
 
 
 def _plain(status, message):
+    """Tiny text/plain response for protocol-level errors."""
     from backend.routes.helpers import Response
 
     return Response(status, message, "text/plain; charset=utf-8")
 
 
 def main():
+    """Bind HOST:PORT and serve forever, one thread per request."""
     # ThreadingHTTPServer = a thread per request, so one slow page never
     # blocks the rest of the app. Threading also means shared globals (the
     # session dict) must be lock-protected — see backend/auth.py.

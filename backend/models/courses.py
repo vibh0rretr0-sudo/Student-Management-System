@@ -137,6 +137,7 @@ def list_enrolled(course_id):
 
 
 def is_enrolled(course_id, student_id):
+    """True when the student is enrolled in the course."""
     row = db.fetch_one(
         "SELECT 1 AS ok FROM enrollments WHERE course_id = %s AND student_id = %s",
         (course_id, student_id),

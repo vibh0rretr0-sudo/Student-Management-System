@@ -15,6 +15,7 @@ from backend.models import db
 # ---------- Assignments ----------
 
 def list_assignments(course_id):
+    """Assignments of one course, due-date order."""
     return db.fetch_all(
         """SELECT id, course_id, title, description, max_marks, due_date
            FROM assignments WHERE course_id = %s ORDER BY due_date, id""",
@@ -23,6 +24,7 @@ def list_assignments(course_id):
 
 
 def get_assignment(assignment_id):
+    """One assignment by id, or None."""
     return db.fetch_one(
         "SELECT id, course_id, title, description, max_marks, due_date FROM assignments WHERE id = %s",
         (assignment_id,),
@@ -30,6 +32,7 @@ def get_assignment(assignment_id):
 
 
 def create_assignment(course_id, title, description, max_marks, due_date):
+    """Insert an assignment; returns its new id."""
     return db.execute(
         """INSERT INTO assignments (course_id, title, description, max_marks, due_date)
            VALUES (%s, %s, %s, %s, %s)""",
@@ -38,6 +41,7 @@ def create_assignment(course_id, title, description, max_marks, due_date):
 
 
 def update_assignment(assignment_id, title, description, max_marks, due_date):
+    """Overwrite an assignment's editable fields."""
     db.execute(
         """UPDATE assignments
            SET title = %s, description = %s, max_marks = %s, due_date = %s
@@ -47,12 +51,14 @@ def update_assignment(assignment_id, title, description, max_marks, due_date):
 
 
 def delete_assignment(assignment_id):
+    """Delete an assignment (its submissions cascade)."""
     db.execute("DELETE FROM assignments WHERE id = %s", (assignment_id,))
 
 
 # ---------- Exams ----------
 
 def list_exams(course_id):
+    """Exams of one course, date order."""
     return db.fetch_all(
         "SELECT id, course_id, title, max_marks, exam_date FROM exams WHERE course_id = %s ORDER BY exam_date, id",
         (course_id,),
@@ -60,6 +66,7 @@ def list_exams(course_id):
 
 
 def get_exam(exam_id):
+    """One exam by id, or None."""
     return db.fetch_one(
         "SELECT id, course_id, title, max_marks, exam_date FROM exams WHERE id = %s",
         (exam_id,),
@@ -67,6 +74,7 @@ def get_exam(exam_id):
 
 
 def create_exam(course_id, title, max_marks, exam_date):
+    """Insert an exam; returns its new id."""
     return db.execute(
         "INSERT INTO exams (course_id, title, max_marks, exam_date) VALUES (%s, %s, %s, %s)",
         (course_id, title, max_marks, exam_date),
@@ -74,6 +82,7 @@ def create_exam(course_id, title, max_marks, exam_date):
 
 
 def delete_exam(exam_id):
+    """Delete an exam (its marks cascade)."""
     db.execute("DELETE FROM exams WHERE id = %s", (exam_id,))
 
 
@@ -92,6 +101,7 @@ def get_submissions(assignment_id):
 
 
 def set_submission(assignment_id, student_id, marks, submitted_on):
+    """Upsert one student's marks (and submitted-on) for an assignment."""
     db.execute(
         """INSERT INTO submissions (assignment_id, student_id, marks_obtained, submitted_on)
            VALUES (%s, %s, %s, %s)
@@ -111,6 +121,7 @@ def get_exam_marks(exam_id):
 
 
 def set_exam_mark(exam_id, student_id, marks):
+    """Upsert one student's marks for an exam."""
     db.execute(
         """INSERT INTO exam_marks (exam_id, student_id, marks_obtained)
            VALUES (%s, %s, %s)

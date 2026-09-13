@@ -20,6 +20,7 @@ def dashboard_stats(professor_id):
 
 
 def _cards(professor_id):
+    """The six summary-card numbers (None where there is no data yet)."""
     total_students = db.fetch_one("SELECT COUNT(*) AS n FROM students")["n"]
     my_courses = db.fetch_one(
         "SELECT COUNT(*) AS n FROM courses WHERE professor_id = %s", (professor_id,)

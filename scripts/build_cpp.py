@@ -25,6 +25,7 @@ OUT = BUILD_DIR / OUT_NAME
 
 
 def main():
+    """Locate g++, compile with warnings enabled, report; exits non-zero on failure."""
     compiler = shutil.which("g++")
     if compiler is None:
         sys.exit("g++ not found on PATH. Install MinGW-w64 or TDM-GCC, then re-run.")
