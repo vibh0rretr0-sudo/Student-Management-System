@@ -2,6 +2,8 @@
 
 Every feature mapped to code, every design decision with its "why", and the
 questions examiners actually ask. Read this the night before the demo.
+For a guided reading path through the code itself, see the
+[`CODE_TOUR.md`](CODE_TOUR.md).
 
 ---
 
