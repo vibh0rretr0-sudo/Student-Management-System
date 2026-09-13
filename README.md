@@ -2,7 +2,7 @@
 
 A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
-> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a visual [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) of how every file connects, MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
+> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a beginner-friendly [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) (how a click becomes a page — no programming knowledge needed), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 
 ## Why this project
 
