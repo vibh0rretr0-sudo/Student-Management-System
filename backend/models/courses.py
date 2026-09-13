@@ -146,7 +146,12 @@ def is_enrolled(course_id, student_id):
 
 
 def enroll(course_id, student_id, enrollment_date):
-    """Enroll a student in a course."""
+    """Enroll a student in a course (friendly 400 on a duplicate)."""
+    # uq_enrollment is the last line of defense in the schema, but a raw
+    # IntegrityError would surface as a 500 — the app should say it in
+    # English first. (A double-click on the Enroll button hits exactly this.)
+    if is_enrolled(course_id, student_id):
+        raise ValueError("That student is already enrolled in this course.")
     db.execute(
         "INSERT INTO enrollments (student_id, course_id, enrollment_date) VALUES (%s, %s, %s)",
         (student_id, course_id, enrollment_date),

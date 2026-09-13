@@ -16,6 +16,11 @@ def login_form(request):
 @route("POST", "/login")
 def login_submit(request):
     """POST /login — verify, create session, set HttpOnly cookie; 401 without user enumeration."""
+    # Already signed in? Same treatment as GET /login: back to the
+    # dashboard. Otherwise a stale tab could silently replace the
+    # session with whatever credentials were lying in the form.
+    if request.user:
+        return Response.redirect("/dashboard")
     username = request.form.get("username", "").strip()
     password = request.form.get("password", "")
     professor = professors.verify_login(username, password)
