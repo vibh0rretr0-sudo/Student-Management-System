@@ -1,5 +1,6 @@
-<!-- Purpose: add/edit student form, shared by both flows via {{action}}.
-     The server re-validates every field (never trusts the browser). -->
+<!-- Purpose: add/edit student form, shared by both flows — the action
+     placeholder carries the POST target. The server re-validates every
+     field (never trusts the browser). -->
 <section class="card form-card" style="--i:0">
   <h2>{{form_title}}</h2>
   <form method="post" action="{{action}}">
