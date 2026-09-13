@@ -2,6 +2,14 @@
 
 Marks grids list every enrolled student with an input for their marks;
 saving upserts all rows. marks_obtained <= max_marks is validated here.
+
+Defense in depth, twice over (viva-ready):
+  1. Nested URLs — every child route re-checks that the assignment/exam
+     really belongs to the course in the URL, so an owner of course 1
+     can't smuggle an id from course 2 into the path.
+  2. Marks inputs — the browser enforces min/max (type=number), but the
+     server re-validates each row with parse_decimal. Blank stays blank:
+     an empty input means "no change", never "give them zero".
 """
 from backend.models import assessments, courses
 from backend.routes import template
@@ -43,6 +51,8 @@ def assignment_delete(request):
     course_id = int(request.params["course_id"])
     _owned_course(request, course_id)
     assignment = assessments.get_assignment(int(request.params["assignment_id"]))
+    # Same message for 'missing' and 'wrong course': no oracle for
+    # probing other professors' assessment ids.
     if assignment is None or assignment["course_id"] != course_id:
         raise NotFound("Assignment not found.")
     assessments.delete_assignment(assignment["id"])
@@ -142,9 +152,10 @@ def _parse_marks(request, course_id, max_marks):
         student_id = int(key[len("marks_"):])
         value = value.strip()
         if value == "":
-            continue
+            continue  # blank = leave any existing mark untouched
         marks = parse_decimal(value, "Marks", minimum=0, maximum=max_marks)
         if not courses.is_enrolled(course_id, student_id):
+            # A forged field name can't graft marks onto a non-enrolled id.
             raise PermissionError("Student is not enrolled in this course.")
         submitted_on = parse_date(
             request.form.get(f"submitted_on_{student_id}"), "Submitted-on date"
@@ -245,6 +256,8 @@ def _exam_marks_tables_html(course_id, exams):
 
 
 def _marks_block(course_id, anchor, title, max_marks, action, rows, with_submitted, block_index=0):
+    # anchor (id="marks-N") is what the 'Enter marks' buttons deep-link to
+    # via #marks-N — pure HTML fragment navigation, no JS.
     head = "<th>Submitted on</th>" if with_submitted else ""
     return (
         f"<section class=\"marks-block\" id=\"{anchor}\" style=\"--i:{block_index}\">"

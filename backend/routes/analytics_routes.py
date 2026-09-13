@@ -1,4 +1,14 @@
-"""Grades and rankings pages powered by the C++ engine."""
+"""Grades and rankings pages powered by the C++ engine.
+
+The access story (worth telling accurately in a viva): grades and rank
+pages are VIEWABLE by any logged-in professor, but only the course
+OWNER's visit persists computed grades into the grades table (the
+upsert below is owner-gated) — a viewer can't write another professor's
+gradebook by looking at it.
+
+Error style: an EngineError (missing/failed binary) renders the page
+with an engine_note instead of a 500 — the UI survives a missing build.
+"""
 from backend import cpp_engine
 from backend.models import assessments, courses
 from backend.routes import template
@@ -18,6 +28,9 @@ def course_grades(request):
         rows = []
         engine_note = str(exc)
 
+    # Owner-gated persistence: viewing recomputes fresh numbers for the
+    # page, but only the owner's visit CACHES them into `grades` (which
+    # feeds the dashboard charts). Computed-on-read + materialized cache.
     if rows and courses.is_owner(course_id, request.user["id"]):
         for r in rows:
             assessments.upsert_grade(r["student_id"], course_id, r["result"], r["final_pct"], course["term"])
@@ -71,6 +84,9 @@ def rankings(request):
     """Section-wide ranking across ALL courses (C++ engine ranks within a section)."""
     rows = []
     engine_note = ""
+    # One engine call PER SECTION: ranking is within-section by design,
+    # and compute_rank returns rows sorted by rank, so extending in
+    # section order keeps the output grouped and ordered.
     for sec in courses.list_sections():
         section_rows = assessments.section_overall_inputs(sec["id"])
         if not section_rows:
@@ -132,6 +148,9 @@ def _rank_rows_html(rows):
         return '<tr><td colspan="5" class="empty">No ranking data.</td></tr>'
     parts = []
     for i, r in enumerate(rows):
+        # Competition ranking comes from C++: equal percentages share a
+        # rank and the next rank SKIPS (1,2,2,4) — the medal map just
+        # decorates the top three.
         medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(r["rank"], str(r["rank"]))
         parts.append(
             f"<tr style=\"--i:{i}\">"
