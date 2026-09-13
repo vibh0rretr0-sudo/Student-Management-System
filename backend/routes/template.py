@@ -3,6 +3,13 @@
 Placeholders look like {{name}}. Every value is HTML-escaped before
 substitution, so user data can never inject markup. The layout wraps
 page content with the sidebar/topbar shell.
+
+WHY hand-rolled (viva answer): the whole engine is read_text + str.replace
+— about 15 lines. That's the entire cost of escaping + layout inheritance
+here, versus learning a template language. The escape responsibility is
+part of the contract: render() does NOT escape automatically, because
+some variables are pre-built fragments (table rows, chart bars); call
+sites escape user data with esc() and pass safe HTML for the rest.
 """
 import html
 from pathlib import Path
@@ -24,6 +31,9 @@ def render(name, **variables):
     pass a fragment they built with esc() around user data, or pass a
     value they esc()'d directly. render() never escapes on its own so
     that pre-built fragments (tables, charts, option lists) work.
+
+    (A missing {{key}} simply stays in the output — which is exactly how
+    the test harness catches unrendered placeholders on live pages.)
     """
     path = Path(config.TEMPLATE_DIR) / name
     text = path.read_text(encoding="utf-8")
@@ -32,6 +42,8 @@ def render(name, **variables):
     return text
 
 
+# The sidebar. (label, key) pairs double as the template's active-tab
+# selector, so adding a nav entry is a one-line change.
 NAV_LINKS = [
     ("/dashboard", "Dashboard", "dashboard"),
     ("/courses", "Courses", "courses"),
@@ -41,7 +53,12 @@ NAV_LINKS = [
 
 
 def page(request, title, content, active=""):
-    """Wrap rendered content in the shared layout with nav highlighting."""
+    """Wrap rendered content in the shared layout with nav highlighting.
+
+    Every page calls this exactly once — it's how the sidebar, theme
+    toggle, and username stay consistent across all 16 templates while
+    each page only builds its inner <body> fragment.
+    """
     nav_html = []
     for href, label, key in NAV_LINKS:
         css_class = ' class="active"' if key == active else ""
