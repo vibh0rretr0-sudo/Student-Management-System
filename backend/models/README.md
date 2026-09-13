@@ -5,6 +5,6 @@ One module per domain area. Every function opens a fresh PyMySQL connection via 
 - `db.py` — connection factory
 - `professors.py` — professor accounts, password verification
 - `students.py` — student CRUD + search
-- `courses.py` — courses, batches, sections, enrollments
-- `assessments.py` — assignments, exams, submissions, exam marks
+- `courses.py` — courses, sections, enrollments
+- `assessments.py` — assessments (assignments + exams), marks, C++ engine aggregates
 - `attendance.py` — attendance marking + retrieval

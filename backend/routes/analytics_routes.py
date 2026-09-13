@@ -34,7 +34,7 @@ def course_grades(request):
     # feeds the dashboard charts). Computed-on-read + materialized cache.
     if rows and courses.is_owner(course_id, request.user["id"]):
         for r in rows:
-            assessments.upsert_grade(r["student_id"], course_id, r["result"], r["final_pct"], course["term"])
+            assessments.upsert_grade(r["student_id"], course_id, r["result"], r["final_pct"])
 
     body = template.render(
         "grades.html",

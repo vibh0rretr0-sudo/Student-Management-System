@@ -9,15 +9,18 @@
 --  * Student 4 (Ishita) sits at 25% attendance  -> Not Eligible.
 --  * Student 5 (Kunal) sits at exactly 75%      -> Eligible (boundary).
 --  * Professor 2 (sharma) owns Course 5 to demo per-professor scoping.
+--
+-- Note: assignments and exams live in ONE `assessments` table (kind
+-- column); ids 1-5 are assignments, 6-10 are exams. Their marks share
+-- the single `marks` table.
 -- ============================================================
 
 USE sms;
 
--- ---------- Batches & sections ----------
-INSERT INTO batches (id, batch_name) VALUES (1, 'SN');
-INSERT INTO sections (id, batch_id, section_name) VALUES
-    (1, 1, 'SN1'),
-    (2, 1, 'SN2');
+-- ---------- Sections (batch is an attribute, not a table) ----------
+INSERT INTO sections (id, batch_name, section_name) VALUES
+    (1, 'SN', 'SN1'),
+    (2, 'SN', 'SN2');
 
 -- ---------- Professors ----------
 -- Password for both accounts: prof123  (PBKDF2-SHA256, 390000 iterations)
@@ -52,16 +55,21 @@ INSERT INTO enrollments (student_id, course_id, enrollment_date) VALUES
     (6, 4, '2026-07-01'), (7, 4, '2026-07-01'), (8, 4, '2026-07-01'),
     (1, 5, '2026-07-01'), (2, 5, '2026-07-01'), (3, 5, '2026-07-01'), (4, 5, '2026-07-01'), (5, 5, '2026-07-01');
 
--- ---------- Assignments ----------
-INSERT INTO assignments (id, course_id, title, description, max_marks, due_date) VALUES
-    (1, 1, 'Assignment 1: C Basics',          'Variables, operators, simple I/O programs.', 20, '2026-08-10'),
-    (2, 1, 'Assignment 2: Loops & Functions', 'Control flow and user-defined functions.',   20, '2026-09-05'),
-    (3, 2, 'Assignment 1: Arrays & Strings',  'Array manipulation exercises.',              25, '2026-08-20'),
-    (4, 3, 'Assignment 1: ER Modeling',       'Draw ER diagrams for given case studies.',   20, '2026-08-25'),
-    (5, 4, 'Assignment 1: Set Theory',        'Problems on sets and relations.',            15, '2026-08-15');
+-- ---------- Assessments (ids 1-5 assignments, 6-10 exams) ----------
+INSERT INTO assessments (id, kind, course_id, title, description, max_marks, assess_date) VALUES
+    (1, 'assignment', 1, 'Assignment 1: C Basics',          'Variables, operators, simple I/O programs.', 20, '2026-08-10'),
+    (2, 'assignment', 1, 'Assignment 2: Loops & Functions', 'Control flow and user-defined functions.',   20, '2026-09-05'),
+    (3, 'assignment', 2, 'Assignment 1: Arrays & Strings',  'Array manipulation exercises.',              25, '2026-08-20'),
+    (4, 'assignment', 3, 'Assignment 1: ER Modeling',       'Draw ER diagrams for given case studies.',   20, '2026-08-25'),
+    (5, 'assignment', 4, 'Assignment 1: Set Theory',        'Problems on sets and relations.',            15, '2026-08-15'),
+    (6, 'exam',       1, 'Midterm',  NULL, 50, '2026-09-01'),
+    (7, 'exam',       1, 'Endterm',  NULL, 50, '2026-11-20'),
+    (8, 'exam',       2, 'Midterm',  NULL, 30, '2026-09-10'),
+    (9, 'exam',       3, 'Midterm',  NULL, 50, '2026-09-12'),
+    (10, 'exam',      4, 'Midterm',  NULL, 40, '2026-09-08');
 
--- ---------- Assignment submissions ----------
-INSERT INTO submissions (id, assignment_id, student_id, marks_obtained, submitted_on) VALUES
+-- ---------- Marks (one table for both kinds) ----------
+INSERT INTO marks (id, assessment_id, student_id, marks_obtained, submitted_on) VALUES
     ( 1, 1, 1, 18, '2026-08-08'), ( 2, 1, 2, 15, '2026-08-09'),
     ( 3, 1, 3, 12, '2026-08-10'), ( 4, 1, 4,  8, '2026-08-10'),
     ( 5, 1, 5, 14, '2026-08-09'),
@@ -71,22 +79,12 @@ INSERT INTO submissions (id, assignment_id, student_id, marks_obtained, submitte
     (11, 3, 6, 21, '2026-08-18'), (12, 3, 7, 17, '2026-08-20'),
     (13, 3, 8, 23, '2026-08-19'),
     (14, 4, 1, 16, '2026-08-24'), (15, 4, 2, 18, '2026-08-25'),
-    (16, 5, 6, 12, '2026-08-14'), (17, 5, 7,  9, '2026-08-15');
-
--- ---------- Exams ----------
-INSERT INTO exams (id, course_id, title, max_marks, exam_date) VALUES
-    (1, 1, 'Midterm',  50, '2026-09-01'),
-    (2, 1, 'Endterm',  50, '2026-11-20'),
-    (3, 2, 'Midterm',  30, '2026-09-10'),
-    (4, 3, 'Midterm',  50, '2026-09-12'),
-    (5, 4, 'Midterm',  40, '2026-09-08');
-
--- ---------- Exam marks ----------
-INSERT INTO exam_marks (exam_id, student_id, marks_obtained) VALUES
-    (1, 1, 42), (1, 2, 35), (1, 3, 28), (1, 4, 18), (1, 5, 31),
-    (3, 6, 24), (3, 7, 19), (3, 8, 26),
-    (4, 1, 38), (4, 2, 41),
-    (5, 6, 33), (5, 7, 21);
+    (16, 5, 6, 12, '2026-08-14'), (17, 5, 7,  9, '2026-08-15'),
+    (18, 6, 1, 42, NULL), (19, 6, 2, 35, NULL), (20, 6, 3, 28, NULL),
+    (21, 6, 4, 18, NULL), (22, 6, 5, 31, NULL),
+    (23, 8, 6, 24, NULL), (24, 8, 7, 19, NULL), (25, 8, 8, 26, NULL),
+    (26, 9, 1, 38, NULL), (27, 9, 2, 41, NULL),
+    (28, 10, 6, 33, NULL), (29, 10, 7, 21, NULL);
 
 -- ---------- Attendance (Course 1: 8 Monday sessions) ----------
 -- Demo story: student 4 = 25% (Not Eligible), student 5 = 75% (boundary Eligible).

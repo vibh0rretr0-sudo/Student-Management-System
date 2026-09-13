@@ -6,9 +6,14 @@
 -- Design notes:
 --  * All tables InnoDB + utf8mb4, snake_case plural names.
 --  * 3NF: no repeating groups, every non-key column depends on the key.
+--  * 9 tables. Assignments and exams are ONE table (`assessments.kind`),
+--    their marks are ONE table (`marks`) — the two kinds share the exact
+--    same shape (owner course, title, max marks, date), so splitting them
+--    duplicated every constraint and query for no benefit. A student's
+--    batch (SN) is an attribute of their section (SN1), not a table.
 --  * `grades` intentionally stores C++-computed results (percentage,
 --    Pass/Fail) — a materialized summary, not raw data; raw data stays
---    in submissions/exam_marks/attendance.
+--    in marks/attendance.
 --  * Marks-vs-max validation (marks_obtained <= max_marks) is enforced
 --    in the application layer; a CHECK cannot reference another table.
 -- ============================================================
@@ -26,19 +31,16 @@ CREATE TABLE professors (
     created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 ) ENGINE = InnoDB;
 
--- ---------- Batch / Section hierarchy (SN -> SN1, SN2) ----------
-
-CREATE TABLE batches (
-    id         INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    batch_name VARCHAR(50) NOT NULL UNIQUE      -- e.g. 'SN'
-) ENGINE = InnoDB;
+-- ---------- Sections (SN1, SN2, ...) ----------
+-- The batch ('SN') is an attribute of the section, not a table of its
+-- own: it is one string consumed only to build the display name, so a
+-- standalone table would be a lookup wrapper with a single row.
 
 CREATE TABLE sections (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    batch_id     INT UNSIGNED NOT NULL,
-    section_name VARCHAR(50) NOT NULL,           -- e.g. 'SN1'
-    UNIQUE KEY uq_section (batch_id, section_name),
-    FOREIGN KEY (batch_id) REFERENCES batches (id)
+    batch_name   VARCHAR(50) NOT NULL,             -- e.g. 'SN'
+    section_name VARCHAR(50) NOT NULL,             -- e.g. 'SN1'
+    UNIQUE KEY uq_section (batch_name, section_name)
 ) ENGINE = InnoDB;
 
 -- ---------- Students (shared pool) ----------
@@ -90,57 +92,39 @@ CREATE TABLE enrollments (
     FOREIGN KEY (course_id)  REFERENCES courses (id)  ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
--- ---------- Assessment: assignments ----------
+-- ---------- Assessment: assignments and exams in ONE table ----------
+-- Exam marks are required for the C++ grade computation, so both kinds
+-- are first-class. They differ only in a label and one date column's
+-- meaning, so `kind` carries the distinction instead of two parallel
+-- tables (assignments/submissions vs exams/exam_marks).
 
-CREATE TABLE assignments (
+CREATE TABLE assessments (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    kind        ENUM ('assignment', 'exam') NOT NULL,
     course_id   INT UNSIGNED NOT NULL,
-    title       VARCHAR(100) NOT NULL,
-    description TEXT NULL,
+    title       VARCHAR(100) NOT NULL,            -- e.g. 'Assignment 1: C Basics', 'Midterm'
+    description TEXT NULL,                        -- assignments only, exams leave it NULL
     max_marks   DECIMAL(5, 2) NOT NULL,
-    due_date    DATE NULL,
-    CONSTRAINT chk_assign_max CHECK (max_marks > 0),
+    assess_date DATE NULL,                        -- due date for assignments, exam date for exams
+    CONSTRAINT chk_assess_max CHECK (max_marks > 0),
     FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
-CREATE TABLE submissions (
+CREATE TABLE marks (
     id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    assignment_id  INT UNSIGNED NOT NULL,
+    assessment_id  INT UNSIGNED NOT NULL,
     student_id     INT UNSIGNED NOT NULL,
     marks_obtained DECIMAL(5, 2) NOT NULL,
-    submitted_on   DATE NULL,
-    UNIQUE KEY uq_submission (assignment_id, student_id),
-    FOREIGN KEY (assignment_id) REFERENCES assignments (id) ON DELETE CASCADE,
+    submitted_on   DATE NULL,                     -- assignments only, NULL for exams
+    UNIQUE KEY uq_mark (assessment_id, student_id),
+    FOREIGN KEY (assessment_id) REFERENCES assessments (id) ON DELETE CASCADE,
     FOREIGN KEY (student_id)    REFERENCES students (id)    ON DELETE CASCADE
-) ENGINE = InnoDB;
-
--- ---------- Assessment: exams ----------
--- Exam marks are required for the C++ grade computation,
--- so exams are first-class entities (confirmed decision).
-
-CREATE TABLE exams (
-    id        INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    course_id INT UNSIGNED NOT NULL,
-    title     VARCHAR(100) NOT NULL,              -- e.g. 'Midterm', 'Endterm'
-    max_marks DECIMAL(5, 2) NOT NULL,
-    exam_date DATE NULL,
-    CONSTRAINT chk_exam_max CHECK (max_marks > 0),
-    FOREIGN KEY (course_id) REFERENCES courses (id) ON DELETE CASCADE
-) ENGINE = InnoDB;
-
-CREATE TABLE exam_marks (
-    id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    exam_id        INT UNSIGNED NOT NULL,
-    student_id     INT UNSIGNED NOT NULL,
-    marks_obtained DECIMAL(5, 2) NOT NULL,
-    UNIQUE KEY uq_exam_mark (exam_id, student_id),
-    FOREIGN KEY (exam_id)    REFERENCES exams (id)    ON DELETE CASCADE,
-    FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;
 
 -- ---------- Computed grades (output of the C++ engine) ----------
 -- Grading scheme (confirmed): final % = 50% assignment avg + 50% exam avg,
--- Pass/Fail with a 40% pass mark.
+-- Pass/Fail with a 40% pass mark. `term` lives on the course alone —
+-- copying it here duplicated a fact without strengthening any key.
 
 CREATE TABLE grades (
     id             INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -148,9 +132,8 @@ CREATE TABLE grades (
     course_id      INT UNSIGNED NOT NULL,
     computed_grade VARCHAR(10)   NOT NULL,          -- 'Pass' / 'Fail'
     percentage     DECIMAL(5, 2) NOT NULL,          -- final percentage 0-100
-    term           VARCHAR(20)   NOT NULL,          -- inherited from the course
     computed_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY uq_grade (student_id, course_id, term),
+    UNIQUE KEY uq_grade (student_id, course_id),
     FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
     FOREIGN KEY (course_id)  REFERENCES courses (id)  ON DELETE CASCADE
 ) ENGINE = InnoDB;

@@ -1,4 +1,4 @@
-"""Courses, batches/sections, and enrollment management.
+"""Courses, sections, and enrollment management.
 
 A course belongs to one professor, one section, and one weekly slot, so
 parallel sections can run labs in the same slot (docs/OVERVIEW.md). Creating a
@@ -11,9 +11,9 @@ from backend.models import db
 def list_sections():
     """All sections with their batch, for dropdowns."""
     return db.fetch_all(
-        """SELECT sec.id, sec.section_name, b.batch_name
-           FROM sections sec JOIN batches b ON b.id = sec.batch_id
-           ORDER BY b.batch_name, sec.section_name"""
+        """SELECT sec.id, sec.section_name, sec.batch_name
+           FROM sections sec
+           ORDER BY sec.batch_name, sec.section_name"""
     )
 
 
