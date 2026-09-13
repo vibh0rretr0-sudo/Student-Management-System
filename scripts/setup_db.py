@@ -8,6 +8,11 @@ What it does:
   4. Applies backend/db/schema.sql, then backend/db/seed.sql (demo data).
 
 Run:  python scripts/setup_db.py
+
+Security posture (say this in the viva): root is used ONLY here, once,
+at setup time; the running app holds just the sms_app account, which
+GRANT ALL ON sms.* scopes to the single schema. The app password is
+written into config.py (git-ignored) — the repo never carries it.
 """
 
 import getpass
@@ -30,7 +35,7 @@ def connect_as_root():
     """Prompt for the root password and connect to the MySQL server."""
     print("MySQL Server must be installed and running (see docs/MYSQL_SETUP.md).")
     print("Enter the root password you set during the MySQL installation.\n")
-    root_password = getpass.getpass("MySQL root password: ")
+    root_password = getpass.getpass("MySQL root password: ")  # getpass: not echoed, not stored
     try:
         return pymysql.connect(
             host="127.0.0.1",
@@ -92,6 +97,9 @@ def run_sql_file(conn, path, label):
     """Execute a .sql file statement by statement (comments stripped, split on ';')."""
     raw = path.read_text(encoding="utf-8")
     lines = [ln for ln in raw.splitlines() if not ln.strip().startswith("--")]
+    # The naive-but-honest splitter: this project's SQL files never use
+    # ';' inside strings, so a plain split is correct and readable. (A
+    # full SQL parser would be over-engineering for two controlled files.)
     statements = [s.strip() for s in "\n".join(lines).split(";") if s.strip()]
     with conn.cursor() as cur:
         for i, statement in enumerate(statements, 1):
@@ -117,6 +125,8 @@ def main():
                 cur.execute("DROP DATABASE sms")
             print("Dropped existing database.")
         else:
+            # Only schema re-applies — existing data is never silently
+            # destroyed by a re-run (the prompt IS the safety feature).
             print("Keeping the existing database; re-applying schema only.")
 
     app_password = choose_app_password()
