@@ -2,7 +2,7 @@
 
 A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
-> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
+> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a visual [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) of how every file connects, MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 
 ## Why this project
 
@@ -70,7 +70,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 │   ├── templates/           # 16 HTML templates ({{placeholder}} substitution)
 │   └── static/css/          # the one stylesheet
 ├── scripts/                 # setup_db.py, build_cpp.py
-└── docs/                    # OVERVIEW + code tour, MySQL setup, UI guide
+└── docs/                    # OVERVIEW + flowchart/diagram, code tour, MySQL setup, UI guide
 ```
 
 ## Setup & Run
