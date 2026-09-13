@@ -148,18 +148,20 @@ def _grade_rows_html(rows):
 
 
 def _rank_rows_html(rows):
-    """Rank table rows; medals decorate the top three."""
+    """Rank table rows; podium ranks get gold/silver/bronze chips."""
     if not rows:
         return '<tr><td colspan="5" class="empty">No ranking data.</td></tr>'
     parts = []
     for i, r in enumerate(rows):
         # Competition ranking comes from C++: equal percentages share a
-        # rank and the next rank SKIPS (1,2,2,4) — the medal map just
-        # decorates the top three.
-        medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(r["rank"], str(r["rank"]))
+        # rank and the next rank SKIPS (1,2,2,4). One uniform badge shape
+        # for every row — podium colors for the top three, quiet neutral
+        # for the rest. (Emoji medals rendered at platform-dependent
+        # sizes and sat misaligned next to plain digits.)
+        chip = {1: "rank-1", 2: "rank-2", 3: "rank-3"}.get(r["rank"], "rank-n")
         parts.append(
             f"<tr style=\"--i:{i}\">"
-            f"<td class=\"rank-cell\">{medal}</td>"
+            f"<td class=\"rank-cell\"><span class=\"rank-chip {chip}\">{r['rank']}</span></td>"
             f"<td>{template.esc(r['roll_number'])}</td>"
             f"<td><a href=\"/students/{r['student_id']}\">{template.esc(r['name'])}</a></td>"
             f"<td>{template.esc(r['section_name'])}</td>"

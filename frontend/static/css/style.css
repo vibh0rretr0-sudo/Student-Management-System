@@ -475,8 +475,26 @@ body:has(#theme-toggle:checked) .toggle-ui .glyph-moon { opacity: 1; transform: 
   vertical-align: top;
 }
 td.actions { text-align: right; white-space: nowrap; }
-td.rank-cell { font-weight: 800; font-size: 1.05rem; }
-td.rank-cell { background: var(--grad-accent); -webkit-background-clip: text; background-clip: text; color: transparent; }
+td.rank-cell { white-space: nowrap; }
+/* Rank badge: one shape for every row; podium colors for the top three.
+   Fixed metal gradients (not theme tokens) so gold/silver/bronze read
+   identically in light and dark. */
+.rank-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2rem;
+  height: 1.55rem;
+  padding: 0 .5rem;
+  border-radius: 999px;
+  font-size: .8rem;
+  font-weight: 800;
+  border: 1px solid transparent;
+}
+.rank-chip.rank-1 { background: linear-gradient(135deg, #ffd76a, #e8a213); color: #4a3403; box-shadow: 0 2px 8px rgba(232, 162, 19, .35); }
+.rank-chip.rank-2 { background: linear-gradient(135deg, #f2f5fa, #b9c2cf); color: #333c4e; box-shadow: 0 2px 8px rgba(150, 160, 180, .35); }
+.rank-chip.rank-3 { background: linear-gradient(135deg, #edb27f, #c06b32); color: #47210a; box-shadow: 0 2px 8px rgba(192, 107, 50, .35); }
+.rank-chip.rank-n { background: var(--glass-inner); color: var(--text-soft); border-color: var(--glass-border); }
 
 /* ---------- forms ---------- */
 .field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .95rem; }
