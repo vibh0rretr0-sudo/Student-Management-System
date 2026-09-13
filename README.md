@@ -2,7 +2,7 @@
 
 A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
-> Full documentation lives in [`docs/`](docs/): PRD, Architecture, Design, Phases, Rules, MySQL setup, interview prep, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
+> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 
 ## Why this project
 
@@ -70,7 +70,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 │   ├── templates/           # 16 HTML templates ({{placeholder}} substitution)
 │   └── static/css/          # the one stylesheet
 ├── scripts/                 # setup_db.py, build_cpp.py
-└── docs/                    # PRD, Architecture, Design, Phases, Rules, setup guides
+└── docs/                    # OVERVIEW + code tour, MySQL setup, UI guide
 ```
 
 ## Setup & Run
@@ -103,14 +103,14 @@ Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / 
 
 - Wrote an HTTP server and router from stdlib primitives — status codes, headers, cookies, and redirects stopped being magic.
 - Learned why parameterized SQL matters by doing it everywhere, including a least-privilege DB user instead of running the app as root.
-- Designed a schema to 3NF with real constraints (per-section roll uniqueness, schedule-clash rules, cascade deletes) and an ERD-level understanding of why.
+- Designed a schema to 3NF with real constraints (per-section roll uniqueness, professor double-booking checks, cascade deletes) and an ERD-level understanding of why.
 - Defined a clean Python↔C++ boundary with a text protocol, and a class of bugs it avoids (DB types like MySQL `TIME` arrive as `timedelta` in Python — formatting stays app-side).
 - Hit and fixed real correctness issues: unheld exams unfairly counted as zeros, permission edge cases for freshly created records — the difference between "works on my data" and "works".
 
 ## Future Work
 
 - Deploy beyond localhost (config is already environment-driven)
-- CSV/PDF report export, DB-backed sessions, automated test suite, CI — deliberate non-goals for v1 (see PRD)
+- CSV/PDF report export, DB-backed sessions, automated test suite, CI — deliberate non-goals for v1 (see docs/OVERVIEW.md)
 
 ---
 

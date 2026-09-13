@@ -10,10 +10,9 @@ from backend.models import db
 # definition keeps SELECT columns consistent across get/search.
 _BASE_SELECT = """
 SELECT s.id, s.name, s.roll_number, s.date_of_birth, s.contact,
-       s.enrollment_date, s.section_id, sec.section_name, b.batch_name
+       s.enrollment_date, s.section_id, sec.section_name, sec.batch_name
 FROM students s
 JOIN sections sec ON sec.id = s.section_id
-JOIN batches b ON b.id = sec.batch_id
 """
 
 

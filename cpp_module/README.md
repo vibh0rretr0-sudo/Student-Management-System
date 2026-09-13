@@ -14,4 +14,4 @@ Build:
 ```
 python scripts/build_cpp.py
 ```
-(uses g++ with `-std=c++14 -Wall -Wextra`; warnings are enabled and fixed per Rules.md §3)
+(uses g++ with `-std=c++14 -Wall -Wextra`; warnings are enabled and fixed before any build is accepted)
