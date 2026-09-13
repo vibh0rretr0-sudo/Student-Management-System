@@ -3,6 +3,19 @@
 Run from the project root:
     python backend/server.py
 Then open http://127.0.0.1:8000 (config.py sets host/port).
+
+The life of a request (memorize this for the viva):
+
+    browser -> TCP socket (ThreadingHTTPServer, one thread per request)
+            -> _build_request()   parses path/query/body into a Request
+            -> dispatch()         matches the URL against the route table
+                                  (backend/routes/__init__.py) and calls
+                                  the handler; handler exceptions become
+                                  400/403/404/500 pages, never tracebacks
+            -> _send()            writes status + headers + body back
+
+The handler itself returns a Response object; it never touches the
+socket. That separation is what keeps routes testable without a server.
 """
 import sys
 import traceback
@@ -17,6 +30,8 @@ from backend import config  # noqa: E402
 import backend.routes  # noqa: E402,F401  (importing registers every route)
 from backend.routes.helpers import Request, dispatch  # noqa: E402
 
+# Reject bodies over ~1 MB: form posts here are tiny, and the cap stops
+# a rogue client from exhausting memory (a hand-rolled DoS guard).
 MAX_BODY_BYTES = 1_000_000
 
 
@@ -33,6 +48,9 @@ class SMSHandler(BaseHTTPRequestHandler):
         self._handle()
 
     def _handle(self):
+        # One try/except wraps the whole exchange: malformed input becomes
+        # a plain 400/413 instead of an empty reply, and dispatch()'s own
+        # error mapping turns handler exceptions into friendly pages.
         try:
             request = self._build_request()
         except _BodyTooLarge:
@@ -45,6 +63,9 @@ class SMSHandler(BaseHTTPRequestHandler):
         self._send(dispatch(request))
 
     def _build_request(self):
+        # urlsplit separates ?query from the path; unquote() then percent-
+        # decodes ONLY the path (e.g. /students/6), leaving ?a=b&c=d intact
+        # for the handler to parse.
         parsed = urllib.parse.urlsplit(self.path)
         body = ""
         length = int(self.headers.get("Content-Length") or 0)
@@ -61,6 +82,8 @@ class SMSHandler(BaseHTTPRequestHandler):
         )
 
     def _send(self, response):
+        # Content-Length + no keep-alive trickery: one clean response per
+        # connection keeps the client logic trivially correct.
         self.send_response(response.status)
         self.send_header("Content-Type", response.content_type)
         self.send_header("Content-Length", str(len(response.body)))
@@ -71,6 +94,8 @@ class SMSHandler(BaseHTTPRequestHandler):
             self.wfile.write(response.body)
 
     def log_message(self, fmt, *args):
+        # BaseHTTPRequestHandler calls this per request; printing to stdout
+        # (redirected to a log file when run detached) gives a free audit trail.
         print(f"{self.address_string()} {fmt % args}")
 
 
@@ -85,6 +110,9 @@ def _plain(status, message):
 
 
 def main():
+    # ThreadingHTTPServer = a thread per request, so one slow page never
+    # blocks the rest of the app. Threading also means shared globals (the
+    # session dict) must be lock-protected — see backend/auth.py.
     server = ThreadingHTTPServer((config.HOST, config.PORT), SMSHandler)
     print(f"SMS running at http://{config.HOST}:{config.PORT}  (Ctrl+C to stop)")
     try:
