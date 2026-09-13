@@ -5,9 +5,8 @@ does, and the ten functions that carry the design. Everything referenced
 here exists in the code with viva-style comments already in place — this
 tour is the index, the code is the textbook.
 
-Companion docs: [`INTERVIEW_PREP.md`](INTERVIEW_PREP.md) (feature → code
-mapping and Q&A), [`UI_GUIDE.md`](UI_GUIDE.md) (the design system),
-[`Architecture.md`](Architecture.md) (layer diagram and decisions).
+Companion docs: [`UI_GUIDE.md`](UI_GUIDE.md) (the design system),
+[`OVERVIEW.md`](OVERVIEW.md) (purpose, architecture, key decisions).
 
 ---
 

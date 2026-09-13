@@ -2,7 +2,7 @@
 
 Every model function opens a short-lived connection, runs parameterized
 SQL, and closes it. All queries use %s placeholders so user input is
-never concatenated into SQL strings (Rules.md §2).
+never concatenated into SQL strings (docs/OVERVIEW.md → Key Decisions).
 
 WHY PARAMETERIZED (viva answer): with %s placeholders, the driver sends
 the SQL and the values separately, so a name like `'); DROP TABLE--`

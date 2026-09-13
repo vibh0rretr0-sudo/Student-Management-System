@@ -1,4 +1,4 @@
-"""Compile the C++ engine (sms_engine) with warnings enabled (Rules.md §3).
+"""Compile the C++ engine (sms_engine) with warnings enabled.
 
 Run:  python scripts/build_cpp.py
 
