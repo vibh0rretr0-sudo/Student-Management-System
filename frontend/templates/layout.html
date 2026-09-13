@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- Purpose: shared app shell (sidebar, topbar, aurora, theme toggle).
+<!-- Purpose: shared app shell (sidebar, topbar, theme toggle).
      Every page renders its inner content through template.page() into
      the content placeholder — one shell, 15 inner pages. NOTE: never
      write placeholder syntax like double-brace tokens inside comments
@@ -13,11 +13,6 @@
 <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
-  <div class="aurora" aria-hidden="true">
-    <div class="orb orb-1"></div>
-    <div class="orb orb-2"></div>
-    <div class="orb orb-3"></div>
-  </div>
   <div class="app">
     <aside class="sidebar">
       <div class="sidebar-brand">JECRC <span>SMS</span></div>

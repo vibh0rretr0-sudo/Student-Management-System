@@ -1,4 +1,11 @@
-# UI Guide — the glassmorphism design system
+# UI Guide — the design system
+
+> **Note (scope trim):** the interface was re-skinned from glassmorphism to
+> a flat, high-contrast JECRC red/white system. Sections below that describe
+> glass surfaces, the aurora background, and chart animations refer to the
+> earlier design and are kept for reference; the tokens, the pure-CSS theme
+> toggle, and every selector/technique outside those effects still match
+> the current stylesheet.
 
 How the interface is built and *why*, in the language you can reuse in a viva
 or interview. Everything below lives in **one stylesheet**
