@@ -1,3 +1,6 @@
+<!-- Purpose: searchable, filterable student list. Filters are GET-form
+     fields (q, course_id, section_id), so every filtered view is a
+     plain bookmarkable URL. -->
 <div class="page-head">
   <form method="get" action="/students" class="filter-bar">
     <input type="text" name="q" value="{{q}}" placeholder="Search name or roll number…" class="search-input">

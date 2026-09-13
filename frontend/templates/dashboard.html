@@ -1,3 +1,6 @@
+<!-- Purpose: stat cards + two CSS-only bar charts. The count-up numbers are
+     pure CSS (@property counter fed by --n); bars grow to --w. Built by
+     dashboard_routes.py. -->
 <section class="cards-grid">
   <div class="stat-card" style="--i:0"><span class="stat-value count-up" style="--n:{{total_students}}"></span><span class="stat-label">Students (institute)</span></div>
   <div class="stat-card" style="--i:1"><span class="stat-value count-up" style="--n:{{my_courses}}"></span><span class="stat-label">My courses</span></div>
