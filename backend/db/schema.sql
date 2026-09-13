@@ -1,6 +1,6 @@
 -- ============================================================
 -- Student Management System — schema.sql
--- Single source of truth for the database structure (Rules.md §5).
+-- Single source of truth for the database structure.
 -- Re-apply with: python scripts/setup_db.py  (it offers drop & recreate)
 --
 -- Design notes:
@@ -115,7 +115,7 @@ CREATE TABLE submissions (
 ) ENGINE = InnoDB;
 
 -- ---------- Assessment: exams ----------
--- Architecture.md requires exam marks for the C++ grade computation,
+-- Exam marks are required for the C++ grade computation,
 -- so exams are first-class entities (confirmed decision).
 
 CREATE TABLE exams (

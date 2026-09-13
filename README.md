@@ -2,7 +2,7 @@
 
 A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
-> Full documentation lives in [`docs/`](docs/): PRD, Architecture, Design, Phases, Rules, MySQL setup, interview prep, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
+> Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 
 ## Why this project
 
@@ -70,7 +70,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 │   ├── templates/           # 16 HTML templates ({{placeholder}} substitution)
 │   └── static/css/          # the one stylesheet
 ├── scripts/                 # setup_db.py, build_cpp.py
-└── docs/                    # PRD, Architecture, Design, Phases, Rules, setup guides
+└── docs/                    # OVERVIEW + code tour, MySQL setup, UI guide
 ```
 
 ## Setup & Run
@@ -110,7 +110,7 @@ Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / 
 ## Future Work
 
 - Deploy beyond localhost (config is already environment-driven)
-- CSV/PDF report export, DB-backed sessions, automated test suite, CI — deliberate non-goals for v1 (see PRD)
+- CSV/PDF report export, DB-backed sessions, automated test suite, CI — deliberate non-goals for v1 (see docs/OVERVIEW.md)
 
 ---
 

@@ -12,5 +12,5 @@ Reading order for the curious — each layer only knows the one below it:
 There is no web framework anywhere: http.server provides the socket, a
 hand-rolled route table provides the "router", and plain strings provide
 the templates. That restraint is the point of the project — see
-docs/Architecture.md for the full rationale.
+docs/OVERVIEW.md for the full rationale.
 """

@@ -1,7 +1,7 @@
 """Courses, batches/sections, and enrollment management.
 
 A course belongs to one professor, one section, and one weekly slot, so
-parallel sections can run labs in the same slot (PRD §11). Creating a
+parallel sections can run labs in the same slot (docs/OVERVIEW.md). Creating a
 course is rejected when the same section already has a course overlapping
 that slot.
 """
@@ -168,7 +168,7 @@ def unenroll(course_id, student_id):
 
 def enrollable_students(course_id):
     """Students in the course's section who are not yet enrolled in it."""
-    # Section-scoped on purpose (PRD): a course belongs to one section,
+    # Section-scoped on purpose (OVERVIEW): a course belongs to one section,
     # so its dropdown lists only that section's students — NOT IN keeps
     # already-enrolled ones out of the re-enroll list.
     course = get(course_id)
