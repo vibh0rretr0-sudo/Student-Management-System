@@ -1,18 +1,16 @@
 # UI Guide — the design system
 
-> **Note (scope trim):** the interface was re-skinned from glassmorphism to
-> a flat, high-contrast JECRC red/white system. Sections below that describe
-> glass surfaces, the aurora background, and chart animations refer to the
-> earlier design and are kept for reference; the tokens, the pure-CSS theme
-> toggle, and every selector/technique outside those effects still match
-> the current stylesheet.
-
 How the interface is built and *why*, in the language you can reuse in a viva
 or interview. Everything below lives in **one stylesheet**
 (`frontend/static/css/style.css`) and runs with **zero JavaScript** — the
 project's framework-free rule turned into a design discipline. For a guided
 path through the whole codebase (not just the UI), see the
 [`CODE_TOUR.md`](CODE_TOUR.md).
+
+> **Design language:** flat, high-contrast surfaces in JECRC red/white.
+> No backdrop blur, no translucent panels, no gradient fills — the charts are
+> plain width-percentage bars. Motion is limited to entrance staggering and
+> the CSS count-up, both driven by server-rendered custom properties.
 
 ---
 
@@ -27,21 +25,22 @@ path through the whole codebase (not just the UI), see the
 
 ---
 
-## 2. Tokens — the whole theme is ~40 CSS variables
+## 2. Tokens — the whole theme is ~30 CSS variables
 
 Everything visual derives from custom properties on `:root`:
 
 ```css
 :root {
-  --accent: #c81e3c;            /* modernized JECRC red */
-  --grad-accent: linear-gradient(135deg, #b71c1c, #c81e3c, #e0334f);
-  --glass: rgba(255,255,255,.60);   /* panel fill */
-  --glass-border: rgba(255,255,255,.75);
-  --blur: 18px;                     /* backdrop blur radius */
-  --radius-lg: 22px;                /* "big & soft" shape language */
-  --shadow-card: 0 10px 34px rgba(24,28,48,.10);
-  --glow-accent: 0 4px 22px rgba(200,30,60,.35);
-  color-scheme: light;              /* paints native widgets to match */
+  --accent:      #b71c1c;   /* JECRC red */
+  --accent-soft: #f7e2e2;   /* flat tint for hovers/rings */
+  --bg:          #f5f5f5;
+  --surface:     #ffffff;
+  --surface-2:   #f0f1f4;
+  --line:        #dcdfe6;
+  --ok / --danger / --warn (+ a -soft tint of each)
+  --radius-lg:   12px;      /* one shape language: 12 / 8 / 6 */
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, .08);
+  color-scheme: light;
 }
 ```
 
@@ -52,46 +51,18 @@ in theme colors automatically.
 
 ---
 
-## 3. Glassmorphism — how the "frosted glass" actually works
+## 3. The flat panel primitive
 
-A glass panel is four ingredients:
-
-1. **Translucent fill** — `background: var(--glass)` (white at 60% alpha).
-2. **Backdrop blur** — `backdrop-filter: blur(18px) saturate(150%)` smears
-   whatever is *behind* the panel; `saturate` keeps the aurora colors juicy.
-   (`-webkit-` prefix included for Safari.)
-3. **A light border** — 1px of near-white sells the "glass edge".
-4. **A soft drop shadow** — lifts the panel off the background.
-
-**Interview soundbite:** *glassmorphism = translucency + backdrop blur + edge
-highlight + elevation shadow; the moving aurora behind the panels is what
-makes the blur visible and the UI feel alive.*
+Seven surfaces — `.card`, `.stat-card`, `.login-card`, `.sidebar`, `.topbar`,
+`.marks-block`, `.danger-zone` — share one rule: `background: var(--surface)`,
+a 1px `--line` border, and a single soft shadow. Depth comes from **contrast
+and borders**, not blur: a light-gray page (`--bg`), white panels, and a red
+accent that marks exactly three things (headers, buttons, active nav).
+Elevation is honest: one 1px–3px shadow, nothing floating on layered glows.
 
 ---
 
-## 4. The aurora — three blurred orbs, pure keyframes
-
-`.aurora` is a fixed, `pointer-events: none` layer holding three `.orb`
-divs: large radial gradients (red, crimson, violet) softened by
-`filter: blur(90px)`, each on a slow `transform` loop (`28s/34s/40s` —
-different durations avoid a visible "reset beat"):
-
-```css
-@keyframes orb-drift-1 {
-  0%   { transform: translate(-8vw,-6vh) scale(1); }
-  50%  { transform: translate(10vw,12vh) scale(1.25); }
-  100% { transform: translate(-8vw,-6vh) scale(1); }
-}
-```
-
-**Why transform only:** the browser can animate `transform` on the compositor
-thread — it never re-runs layout or paint, so three huge blurred elements stay
-cheap. Animating `top/left` would run layout every frame. `will-change:
-transform` hints the promotion.
-
----
-
-## 5. Light/dark with a checkbox — no JS theme switch
+## 4. Light/dark with a checkbox — no JS theme switch
 
 The topbar has a real `<input type="checkbox" id="theme-toggle">` (visually
 hidden, wrapped in a styled label). The whole dark theme is a second variable
@@ -99,10 +70,8 @@ set:
 
 ```css
 body:has(#theme-toggle:checked) {
-  --bg: #0c0f1c;
-  --glass: rgba(21,25,42,.62);
-  --accent: #ef4467;
-  /* ...~25 more overrides... */
+  --bg: #14161d;  --surface: #1d2029;  --accent: #ef4467;
+  /* ...the remaining overrides... */
   color-scheme: dark;
 }
 ```
@@ -111,8 +80,10 @@ body:has(#theme-toggle:checked) {
   nested inside it — the classic no-JS toggle pattern.
 - The default state is **light**; the toggle **overrides**, regardless of OS
   setting (a product decision, confirmed with the project owner).
-- The toggle's own visuals (sliding gradient thumb, glyph emphasis) are styled
-  through the same selector, so the switch animates itself.
+- The toggle is an iOS-style shifter: the solid thumb is a `::before` that
+  slides under two glyphs. The math is fixed by construction — glyphs are
+  16px wide with a 5px gap and 9px side padding, so the thumb is 16px at
+  `left: 9px` and shifts exactly `16 + 5 = 21px` to land on the second glyph.
 
 **Costs worth naming in an interview:** the choice lives in the checkbox only,
 so it resets on reload — persisting it without JS would need a cookie or a
@@ -122,11 +93,11 @@ specificity flat and predictable.
 
 ---
 
-## 6. Staggered entrances — one keyframe, server-side delays
+## 5. Staggered entrances — one keyframe, server-side delays
 
-One `rise-in` keyframe (fade + 14px slide + 0.985→1 scale) is reused by cards,
-stat tiles, table rows, chart rows and nav links. The stagger comes from an
-index the **server** renders into an inline custom property:
+One `rise-in` keyframe (fade + 10px slide) is reused by cards, stat tiles,
+table rows, chart rows and nav links. The stagger comes from an index the
+**server** renders into an inline custom property:
 
 ```html
 <div class="stat-card" style="--i:3">
@@ -134,47 +105,24 @@ index the **server** renders into an inline custom property:
 ```
 
 ```css
-.card { animation: rise-in .5s cubic-bezier(.22,.9,.3,1) both;
-        animation-delay: calc(min(var(--i,0),12) * 70ms); }
+.card { animation: rise-in .4s ease both;
+        animation-delay: calc(min(var(--i, 0), 12) * 60ms); }
 ```
 
-`min(var(--i),12)` caps the delay so a 50-row table can't wait 3.5s for its
-last row; `both` fill mode applies the "from" state during the delay (no
-flash of unanimated content). Python only learned to emit a counter — no
-rendering logic changed.
+`min(var(--i), 12)` caps the delay so a 50-row table can't wait for its last
+row (table rows use a slightly faster 28ms step with a cap of 24); `both` fill
+mode applies the "from" state during the delay (no flash of unanimated
+content). Python only learned to emit a counter — no rendering logic changed.
 
 ---
 
-## 7. Charts that grow — `--w` and a spring curve
-
-Routes emit bar widths as a custom property instead of a literal `width`:
-
-```html
-<div class="bar-track threshold"><div class="bar-fill" style="--w:62%"></div></div>
-```
-
-```css
-.bar-fill { width: var(--w, 0%);
-            animation: bar-grow 1s cubic-bezier(.25,1.25,.4,1) both;
-            animation-delay: calc(min(var(--i,0),12) * 60ms + 150ms); }
-@keyframes bar-grow { from { width: 0; } }
-```
-
-The cubic-bezier has a control point **above 1** on the y-axis, which
-overshoots slightly and settles — a spring feel without JS physics. The
-attendance track adds a dashed 75% eligibility line (`::after` at `left:75%`)
-and a warm `box-shadow` glow on bars below the cutoff — the threshold rule the
-C++ engine enforces, made visible.
-
----
-
-## 8. Count-up numbers — `@property` + CSS counters
+## 6. Count-up numbers — `@property` + CSS counters
 
 Stat values that are always integers (students, courses) roll up from zero:
 
 ```css
 @property --n { syntax: "<integer>"; inherits: false; initial-value: 0; }
-.stat-value.count-up { counter-reset: stat var(--n); }
+.stat-value.count-up { counter-reset: stat var(--n); animation: count-up 1s ease-out both; }
 .stat-value.count-up::after { content: counter(stat); }
 @keyframes count-up { from { --n: 0; } }
 ```
@@ -190,26 +138,39 @@ Stat values that are always integers (students, courses) roll up from zero:
 
 ---
 
-## 9. Login scene — the sanctioned exception
+## 7. Charts that ARE the data — plain width bars
 
-The login page drops the "refined chrome" restraint: `login-rise` keyframe
-overshoots and settles (bounce), inputs get a red glow ring on focus, and the
-button carries a slow sheen sweep:
+Routes emit bar widths as a custom property; the stylesheet renders it
+directly — no grow animation, because the number is the visual:
 
-```css
-.login-card .btn::after {
-  content: ""; position: absolute; width: 45%; inset-block: 0;
-  background: linear-gradient(100deg, transparent, rgba(255,255,255,.5), transparent);
-  animation: sheen-sweep 4.6s ease-in-out infinite;
-}
+```html
+<div class="bar-row" style="--i:2">
+  <span class="bar-label">Aarav Sharma</span>
+  <div class="bar-track threshold"><div class="bar-fill warn" style="--w:62.5%"></div></div>
+  <span class="bar-value">62.5</span>
+</div>
 ```
 
-The pseudo-element translates across and `overflow: hidden` clips it — a
-highlight, not an image. `pointer-events: none` keeps it non-interactive.
+The row is a CSS grid (`label | track | value`), the fill is `width:
+var(--w)`. The attendance track adds a dashed 75%-eligibility line — drawn
+**under** the fill (`z-index`), inset 2px so it never pokes past the rounded
+corners, and rendered **only when the bar is actually below the cutoff** (on
+at-or-above bars the line would just peek past the tip). Below-cutoff bars
+also get the warm `--warn` fill. Both signals are server-decided: Python
+compares the rate to 75 and emits the classes — CSS never makes a data
+decision.
 
 ---
 
-## 10. Cross-fades, shimmer, scrollbar — the polish layer
+## 8. Rank chips — fixed metal colors
+
+The podium chips use literal gold/silver/bronze colors, **not** theme tokens,
+so "1st place" reads identically in light and dark mode; every other rank
+uses `--surface-2` and inherits the theme. One pill shape, four color rules.
+
+---
+
+## 9. Cross-fades, scrollbars, focus — the polish layer
 
 - **Page transitions:** `@view-transition { navigation: auto; }` + old/new
   pseudo-elements fade pages on navigation in Chromium; other browsers ignore
@@ -218,43 +179,48 @@ highlight, not an image. `pointer-events: none` keeps it non-interactive.
   and because software-rendered/headless environments can stall on
   cross-document transitions (found by probing headless screenshots; the
   media gate plus feature detection makes the fallback instant everywhere).
-- **Shimmering badges:** Pass/Fail pills are two stacked background images —
-  the badge color plus a moving white `linear-gradient` sheen
-  (`background-position` animation, `background-size: 220%`).
-- **Selection/scrollbars:** `::selection`, `scrollbar-width/color`, and
-  `-webkit-scrollbar` in accent gradients.
+- **Scrollbars/selection:** `::selection` in the accent tint,
+  `scrollbar-width/color`, and `-webkit-scrollbar` thumbs in the accent.
 - **Focus:** `:focus-visible` outlines for keyboard users without punishing
   mouse clicks.
 
 ---
 
-## 11. Reduced motion — a first-class fallback
+## 10. Reduced motion + small screens — the safety nets
 
 ```css
 @media (prefers-reduced-motion: reduce) {
-  .aurora .orb { animation: none; }
-  .card, .stat-card, .bar-row, .data-table tbody tr { animation: none; opacity: 1; transform: none; }
-  .bar-fill { animation: none; width: var(--w, 0%); }  /* final state immediately */
+  .card, .stat-card, .marks-block, .data-table tbody tr, .bar-row,
+  .sidebar-nav a, .login-card { animation: none; opacity: 1; transform: none; }
+  .stat-value.count-up { animation: none; }
   * { transition-duration: .01ms !important; }
 }
 ```
 
 Motion is an enhancement; the static UI is identical informationally.
+Below 860px the sidebar stacks into a header, and — the classic mobile
+data-table pattern — wide tables turn into `display: block; overflow-x: auto`
+boxes that scroll **inside their panel** instead of stretching the page
+sideways (verified at 320px on every table-heavy page); marks/date inputs
+shrink to match.
 
 ---
 
-## 12. Viva one-liners
+## 11. Viva one-liners
 
-- "The theme system is **~25 overridden CSS variables**, not a second stylesheet."
-- "Animations run on the **compositor** (`transform`, `opacity`, typed
-  `@property`) so the aurora never triggers layout."
-- "Stagger indexes are **rendered by Python**, so markup and motion stay in
-  sync without JS."
+- "The theme system is **a second set of ~30 CSS variables**, not a second
+  stylesheet — `:has()` makes a checkbox a theme switch."
+- "The thumb shift is **fixed by construction**: 16px glyph + 5px gap = a
+  21px `translateX`, no measuring."
+- "Stagger indexes are **rendered by Python**, and `min(--i, 12)` caps the
+  wait — markup and motion stay in sync without JS."
 - "Every dynamic number has a **static fallback**; progressive enhancement
   means the page degrades to a fully working 2015-era UI."
+- "The charts are **data, not decoration** — a server-computed `<div>` width
+  and a threshold line the server decided to draw."
 - "Marks saves are true **upserts** using MySQL 8.0.19+ row aliases
   (`INSERT ... AS new ON DUPLICATE KEY UPDATE ... = new.col`) — readable,
   and a version detail worth naming."
-- "I proved the restyle didn't change behavior: a **snapshot diff of 18
+- "I proved the restyle didn't change behavior: a **snapshot diff of the
   routes** — statuses, forms, inputs, links, permission probes — came back
   identical."

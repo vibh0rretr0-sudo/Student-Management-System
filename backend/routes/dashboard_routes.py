@@ -2,9 +2,10 @@
 
 The chart trick (the showpiece answer): a bar is just a div whose width
 is set via the CSS custom property --w (style="--w:62.5%"); the
-stylesheet animates that property to full width on load. Python's only
-job is computing the numbers — presentation lives entirely in CSS.
-The --i index drives the staggered entrance animation the same way.
+stylesheet renders that width directly — no grow animation, the number
+IS the visual (flat design). Python's only job is computing the numbers
+— presentation lives entirely in CSS. The --i index drives the staggered
+entrance animation the same way.
 """
 from backend.models import stats
 from backend.routes import template
@@ -60,7 +61,7 @@ def _grade_chart_html(bands):
 
 
 def _attendance_chart_html(courses):
-    """Bar rows per course; warn glow + threshold line only below 75%."""
+    """Bar rows per course; warn fill + threshold line only below 75%."""
     bars = []
     for i, c in enumerate(courses):
         if c["rate"] is None:
@@ -71,7 +72,7 @@ def _attendance_chart_html(courses):
             continue
         width = round(c["rate"], 1)
         # Two visual signals for 'below the line', both server-decided:
-        # the warm warn glow on the fill, and the dashed 75%-line marker
+        # the warm warn fill color, and the dashed 75%-line marker
         # on the track — only rendered when the bar is actually BELOW
         # the cutoff (on at-or-above bars it would just peek past the tip).
         css_class = "bar-fill warn" if c["rate"] < 75 else "bar-fill"

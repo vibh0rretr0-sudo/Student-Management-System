@@ -21,8 +21,8 @@ Companion docs: [`UI_GUIDE.md`](UI_GUIDE.md) (the design system),
 | 5 | `backend/models/db.py`, then any model | The parameterized-SQL guarantee and the connect-per-query pattern |
 | 6 | `backend/models/courses.py` → `students.py` → `attendance.py` → `assessments.py` → `stats.py` | The domain rules: ownership, roll uniqueness, professor double-booking, the 75% and missing=0 rules |
 | 7 | `backend/cpp_engine.py` → `cpp_module/src/sms_engine.cpp` | The subprocess + TSV bridge and the pure-computation engine |
-| 8 | `backend/routes/` (the six modules) | Handlers as thin coordinators: validate → model → render |
-| 9 | `frontend/static/css/style.css` + `docs/UI_GUIDE.md` | Zero-JS glassmorphism: tokens, aurora, charts, reduced-motion |
+| 8 | `backend/routes/` (the eight modules) | Handlers as thin coordinators: validate → model → render |
+| 9 | `frontend/static/css/style.css` + `docs/UI_GUIDE.md` | Zero-JS flat design: tokens, `:has()` theme toggle, entrance staggering, reduced-motion |
 | 10 | `scripts/setup_db.py`, `scripts/build_cpp.py` | Reproducible setup: two-account DB security, warning-clean build |
 
 ## 2. The map

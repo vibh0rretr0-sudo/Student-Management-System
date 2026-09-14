@@ -72,7 +72,7 @@ def assignment_marks_save(request):
     if assignment is None or assignment["course_id"] != course_id:
         raise NotFound("Assignment not found.")
     for student_id, marks, submitted_on in _parse_marks(request, course_id, float(assignment["max_marks"])):
-        assessments.set_submission(assignment["id"], student_id, marks, submitted_on)
+        assessments.set_mark(assignment["id"], student_id, marks, submitted_on)
     return Response.redirect(f"/courses/{course_id}/assignments")
 
 
@@ -129,7 +129,7 @@ def exam_marks_save(request):
     if exam is None or exam["course_id"] != course_id:
         raise NotFound("Exam not found.")
     for student_id, marks, _submitted_on in _parse_marks(request, course_id, float(exam["max_marks"])):
-        assessments.set_exam_mark(exam["id"], student_id, marks)
+        assessments.set_mark(exam["id"], student_id, marks)
     return Response.redirect(f"/courses/{course_id}/exams")
 
 
@@ -222,7 +222,7 @@ def _assignment_marks_tables_html(course_id, assignments):
     """One marks-entry table per assignment."""
     parts = []
     for bi, a in enumerate(assignments):
-        existing = assessments.get_submissions(a["id"])
+        existing = assessments.get_marks(a["id"])
         rows = []
         for i, s in enumerate(courses.list_enrolled(course_id)):
             rec = existing.get(s["id"], {})
@@ -248,10 +248,10 @@ def _exam_marks_tables_html(course_id, exams):
     """One marks-entry table per exam."""
     parts = []
     for bi, x in enumerate(exams):
-        existing = assessments.get_exam_marks(x["id"])
+        existing = assessments.get_marks(x["id"])
         rows = []
         for i, s in enumerate(courses.list_enrolled(course_id)):
-            marks = existing.get(s["id"])
+            marks = (existing.get(s["id"]) or {}).get("marks")
             marks_value = "" if marks is None else f"{marks:g}"
             rows.append(
                 f"<tr style=\"--i:{i}\">"

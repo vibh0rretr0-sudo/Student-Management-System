@@ -10,3 +10,4 @@ Each module registers its URL patterns on the shared dispatcher. Handlers receiv
 - `attendance_routes.py` — attendance marking
 - `dashboard_routes.py` — dashboard with CSS-only charts
 - `analytics_routes.py` — grades/attendance/rankings pages powered by the C++ engine
+- `static_routes.py` — serves `frontend/static/*` (path-containment defense)

@@ -119,30 +119,6 @@ def set_mark(assessment_id, student_id, marks, submitted_on=None):
     )
 
 
-# Backward-named thin aliases: the routes were written against the two-
-# table vocabulary (submissions for assignments, exam marks for exams).
-# One shared marks table means both are now the same operation.
-
-def get_submissions(assignment_id):
-    """Marks map for one assignment (assignments carry submitted-on)."""
-    return get_marks(assignment_id)
-
-
-def set_submission(assignment_id, student_id, marks, submitted_on):
-    """Upsert one student's assignment marks."""
-    set_mark(assignment_id, student_id, marks, submitted_on)
-
-
-def get_exam_marks(exam_id):
-    """{student_id: marks} for one exam (exams have no submitted-on)."""
-    return {sid: rec["marks"] for sid, rec in get_marks(exam_id).items()}
-
-
-def set_exam_mark(exam_id, student_id, marks):
-    """Upsert one student's exam marks."""
-    set_mark(exam_id, student_id, marks)
-
-
 # ---------- Computed grades (C++ engine output) ----------
 
 def upsert_grade(student_id, course_id, grade, percentage):

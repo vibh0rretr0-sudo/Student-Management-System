@@ -8,3 +8,4 @@ One module per domain area. Every function opens a fresh PyMySQL connection via 
 - `courses.py` — courses, sections, enrollments
 - `assessments.py` — assessments (assignments + exams), marks, C++ engine aggregates
 - `attendance.py` — attendance marking + retrieval
+- `stats.py` — dashboard aggregates (avg attendance, grade bands, pass rate)

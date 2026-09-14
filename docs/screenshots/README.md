@@ -1,7 +1,7 @@
 # Screenshots
 
-Drop the demo captures here before publishing, using these names
-(referenced by the README's Screenshots table):
+The demo captures live here — they are referenced by the README's
+Screenshots table. To re-capture them, keep these exact names:
 
 - `login.png` — login page
 - `dashboard.png` — dashboard with cards + charts
