@@ -36,7 +36,7 @@ def parse_date(value, label="date"):
         raise ValueError(f"{label} must be in YYYY-MM-DD format (got '{value}').")
 
 
-def parse_decimal(value, label="number", minimum=None, maximum=None, allow_blank=False):
+def parse_decimal(value, label="number", minimum=None, maximum=None):
     """Validate a decimal number with optional bounds.
 
     minimum/maximum exist for marks (0..max_marks) — bounds are policy,
@@ -44,8 +44,6 @@ def parse_decimal(value, label="number", minimum=None, maximum=None, allow_blank
     """
     value = (value or "").strip()
     if not value:
-        if allow_blank:
-            return None
         raise ValueError(f"{label} is required.")
     try:
         number = float(value)

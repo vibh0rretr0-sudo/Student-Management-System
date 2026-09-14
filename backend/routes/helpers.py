@@ -87,8 +87,7 @@ class Request:
                 self.cookies = {k: m.value for k, m in jar.items()}
             except http_cookies.CookieError:
                 pass
-        self.session = None
-        self.user = None
+        self.user = None  # attached by dispatch() when a valid session cookie exists
 
 
 class Response:
@@ -139,11 +138,11 @@ def dispatch(request):
     # Attach session/user BEFORE routing, so even the 404 page can render
     # the logged-in navigation.
     token = request.cookies.get(auth.SESSION_COOKIE)
-    request.session = auth.get_session(token)
-    if request.session:
+    session = auth.get_session(token)
+    if session:
         from backend.models import professors
 
-        request.user = professors.get_by_id(request.session["professor_id"])
+        request.user = professors.get_by_id(session["professor_id"])
 
     allowed_methods = set()
     for method, pattern, handler in ROUTES:

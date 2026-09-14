@@ -4,8 +4,8 @@ from pathlib import Path
 from backend import config
 from backend.routes.helpers import Response, route
 
-# Only types the app actually ships; anything else gets the honest
-# application/octet-stream rather than a wrong guess.
+# Only type the app actually ships (style.css). Any other extension gets
+# the honest application/octet-stream rather than a wrong guess.
 CONTENT_TYPES = {".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".png": "image/png"}
 # resolve() upfront: the containment test below only works against a
 # fully-resolved root (no ../ segments left inside).

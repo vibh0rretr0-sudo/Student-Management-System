@@ -1,7 +1,7 @@
 """Login / logout routes."""
 from backend import auth
 from backend.models import professors
-from backend.routes.helpers import Request, Response, route  # noqa: F401 (Request imported for type clarity)
+from backend.routes.helpers import Response, route
 
 
 @route("GET", "/login")
