@@ -3,6 +3,8 @@
 A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
 > Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a beginner-friendly [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) (how a click becomes a page — no programming knowledge needed), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
+>
+> **New here? Start with [`HOW_TO_USE.md`](HOW_TO_USE.md)** — it walks you from cloning this repo to a running app in about 15 minutes, with every command and every prompt explained.
 
 ## How it works — in one picture
 
@@ -81,7 +83,7 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 
 ## Setup & Run
 
-Prerequisites: Python 3.10+, a C++ compiler (`g++`), and MySQL 8 — see [`docs/MYSQL_SETUP.md`](docs/MYSQL_SETUP.md) for the full install walkthrough.
+Prerequisites: Python 3.10+, a C++ compiler (`g++`), and MySQL 8 — see [`docs/MYSQL_SETUP.md`](docs/MYSQL_SETUP.md) for the full install walkthrough, or [`HOW_TO_USE.md`](HOW_TO_USE.md) for the complete step-by-step from clone to running app.
 
 ```bash
 pip install -r requirements.txt      # PyMySQL + cryptography
