@@ -24,6 +24,3 @@ desktop.ini
 
 # --- Freebuff workspace artifacts (thread-local logs/ids) ---
 .freebuff/
-
-# --- Local learning folder (prep material, not part of the repo) ---
-/Learning/

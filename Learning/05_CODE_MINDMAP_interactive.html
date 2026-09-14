@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Code Mindmap — Student Management System</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #ffffff; }
+  #mindmap { width: 100vw; height: 100vh; }
+  .markmap-node text { font-family: "Segoe UI", Arial, sans-serif; }
+</style>
+<!-- Markmap auto-loader: renders the markdown below as an interactive mindmap.
+     Needs internet on first view (CDN); everything else is offline. -->
+<script src="https://cdn.jsdelivr.net/npm/markmap-autoloader@0.16"></script>
+</head>
+<body>
+<div class="markmap" id="mindmap">
+<script type="text/template">
+# SMS — how the code fits
+
+## 👀 What you see — frontend/templates/
+### layout.html — shared shell: sidebar, topbar, theme toggle
+### login.html — sign-in page
+### dashboard.html — 6 stat cards + 2 bar charts
+### students.html / student_form / student_detail
+### courses.html / course_form / course_detail
+### assignments.html / exams.html — marks grids
+### attendance.html — pick date, tick present
+### grades.html / rankings.html — C++ results
+### error.html — 400 / 403 / 404 / 500
+### static/css/style.css — the ONLY paint
+#### flat JECRC red & white
+#### dark mode: checkbox + :has() — zero JS
+#### gentle animations: rise-in, count-up
+
+## 🚪 The door — backend/server.py
+### listens at 127.0.0.1:8000
+### one thread per visitor
+### never touches the database itself
+
+## 🗂️ Sorting office — routes/helpers.py
+### matches URL → the right handler
+### attaches your login (cookie → session)
+### errors → proper pages
+#### ValueError → 400
+#### PermissionError → 403
+#### NotFound → 404
+
+## 🏗️ Page builders — backend/routes/
+### dashboard_routes.py — home page + chart widths
+### student_routes.py — CRUD + search
+### course_routes.py — courses + no-double-booking rule
+### assessment_routes.py — marks grids (true upsert)
+### attendance_routes.py — marking + 75% eligibility
+### analytics_routes.py — grades + rankings
+### auth_routes.py — login/logout
+### static_routes.py — serves style.css safely
+
+## 🗄️ Clerks — backend/models/ (the ONLY SQL)
+### db.py — one connection per request, %s placeholders always
+### professors.py — accounts
+### students.py — CRUD + can_edit rule
+### courses.py — sections, enrollment, timetable check
+### assessments.py — ONE table for assignments + exams + marks
+### attendance.py — one row per student per day
+### stats.py — dashboard averages
+
+## 🔐 The vault — backend/auth.py
+### PBKDF2, 390,000 rounds, unique salt
+### constant-time compare (no timing leaks)
+### sessions: lock-protected dict, HttpOnly cookie, 7 days
+
+## 🧮 Calculator room — cpp_module/
+### cpp_engine.py — packs TSV in, unpacks answers
+### sms_engine.cpp — one binary, 3 modes
+#### grades: 50% coursework + 50% exams, pass ≥ 40
+#### attendance: eligible at ≥ 75
+#### rank: ties share a rank (1-2-2-4)
+### tests/ — hand-computed fixtures = proof
+
+## 🗃️ Filing cabinet — backend/db/
+### schema.sql — 9 tables, 12 foreign keys, cascade deletes
+### seed.sql — 2 professors, 2 sections, 8 students
+
+## 🧰 Setup — scripts/
+### setup_db.py — database + limited app user
+### build_cpp.py — g++ compile, zero warnings
+
+## 🔁 The loop every click runs
+### ① you click → ② server greets → ③ helpers sorts
+### ④ route asks → ⑤ model queries MySQL
+### ⑥ maybe C++ computes → ⑦ template fills → ⑧ page appears
+</script>
+</div>
+</body>
+</html>
