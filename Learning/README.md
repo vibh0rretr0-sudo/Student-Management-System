@@ -9,8 +9,8 @@ programming**. Start at the top; each file stands on its own.
 | 02 | [`02_ERD_WHITEBOARD_9_tables_12_arrows.png`](02_ERD_WHITEBOARD_9_tables_12_arrows.png) | The 9-table database drawn out: every table, all 12 foreign-key arrows color-coded, and the 2-minute drawing method | Practice drawing it from memory |
 | 03 | [`03_VIVA_CHEAT_SHEET.png`](03_VIVA_CHEAT_SHEET.png) | One page: the numbers to memorize, the top 10 answers, the 60-second opener | Read in the corridor before the viva |
 | 04 | [`04_CODE_MAP_every_file_explained.png`](04_CODE_MAP_every_file_explained.png) | **Every file in the project, in plain words** — grouped into 8 layers, from "what you see" down to the database | Open it next to the code |
-| 05 | [`05_CODE_MINDMAP_interactive.html`](05_CODE_MINDMAP_interactive.html) | The whole map as an **interactive mindmap** — zoom, fold, unfold branches | Open in any browser; needs internet on first view (the renderer loads from a CDN) |
-| 06 | [`06_CODE_MINDMAP_static.png`](06_CODE_MINDMAP_static.png) | The same mindmap as a static picture (64 nodes) | View anywhere, including GitHub |
+| 05 | [`05_CODE_MINDMAP_interactive.html`](05_CODE_MINDMAP_interactive.html) | The whole map as an **interactive mindmap** — click circles to fold/unfold, scroll to zoom, drag to pan | Open in any browser; needs internet on first view (the renderer loads from a CDN) |
+| 06 | [`06_CODE_MINDMAP_static.png`](06_CODE_MINDMAP_static.png) | The same mindmap as a static picture (65 nodes) | View anywhere, including GitHub |
 
 ## Suggested order
 
