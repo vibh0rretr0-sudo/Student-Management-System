@@ -93,7 +93,7 @@ python scripts/setup_db.py           # create DB + app user + schema + demo data
 python backend/server.py             # http://127.0.0.1:8000
 ```
 
-Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / prof123` (owns 1 — good for showing per-professor scoping).
+Demo logins (from seed data): every timetable teacher, e.g. `cheena / prof123` (owns all CPLT courses) — and `vibhor / prof123`, who owns **no** courses, which makes per-professor scoping (the 403s) easy to demo.
 
 > `backend/config.py` holds local DB credentials and is git-ignored; copy `backend/config.example.py` and fill in your values if setting up manually.
 

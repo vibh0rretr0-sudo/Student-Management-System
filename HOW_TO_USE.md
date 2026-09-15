@@ -115,8 +115,9 @@ What it does for you afterwards:
 - creates the `sms` database and the limited `sms_app` user,
 - **writes `backend/config.py` for you** (the DB password lands there
   automatically — that file is git-ignored, so it never reaches GitHub),
-- loads the 9-table schema and the demo data (2 professors, 2 sections,
-  8 students, assignments, exams, marks, attendance).
+- loads the 11-table schema and the demo data — the real JECRC SN-DevOps
+  timetable (8 professors, 2 sections SN1/SN2, 30 students, 31 course
+  slots, assignments, exams, marks, attendance, announcements).
 
 It ends with: `Done. Demo professor login -> username: vibhor  password: prof123`
 
@@ -148,12 +149,15 @@ Leave this terminal open — the app lives in it. Then open
 
 ## 7. Log in and explore
 
-Two demo professors come with the seed data:
+The seed data mirrors the real JECRC timetable (Section SN, DevOps,
+Sem-1 2026-27). Every timetable teacher has a login (password `prof123`
+for all): `anubhav`, `cheena`, `abhishek`, `pranav`, `anilsharma`,
+`priyanka`, `monika` — plus the demo account:
 
 | Username | Password | Owns |
 |---|---|---|
-| `vibhor` | `prof123` | 4 courses — the full experience |
-| `sharma` | `prof123` | 1 course — ideal for testing permissions |
+| `cheena` | `prof123` | all CPLT lectures + Saturday lab — the full experience |
+| `vibhor` | `prof123` | nothing — ideal for testing permissions (403s) |
 
 A 2-minute tour:
 
@@ -171,11 +175,11 @@ A 2-minute tour:
 5. **Theme toggle** (top bar) → click it, visit three different tabs —
    the dark mode follows you. It's saved in a cookie by the server, so
    it survives restarts too.
-6. Now the permission trick: log out, log in as **sharma**, and browse
-   around — she can *view* all students, open vibhor's grades, and read
-   institute-wide announcements, but the moment she opens a marks sheet,
-   tries to edit something that isn't hers, or deletes another
-   professor's announcement, she gets a proper **403/404 page**. That
+6. Now the permission trick: log out, log in as **vibhor**, and browse
+   around — he can *view* all students, open cheena's grades, and read
+   institute-wide announcements, but the moment he opens a marks sheet,
+   tries to edit something that isn't his, or deletes another
+   professor's announcement, he gets a proper **403/404 page**. That
    check is enforced server-side, not just hidden in the buttons.
 
 ---

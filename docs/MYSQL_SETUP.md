@@ -53,8 +53,9 @@ python backend/server.py
 ```
 
 Open <http://127.0.0.1:8000/login> and log in with the seeded demo
-professor: **`vibhor` / `prof123`**. The second seeded account
-(`sharma` / `prof123`) exists to demo per-professor data scoping.
+professor: **`vibhor` / `prof123`** (owns no courses — perfect for
+demoing per-professor data scoping). Any timetable teacher, e.g.
+`cheena` / `prof123`, shows the full data experience.
 
 ## 6. Reminder before you push to GitHub
 
