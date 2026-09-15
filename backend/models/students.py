@@ -26,6 +26,42 @@ def create(name, roll_number, section_id, enrollment_date, date_of_birth=None, c
     )
 
 
+def create_bulk(rows):
+    """Insert many students in ONE transaction; return the new ids.
+
+    All-or-nothing (viva answer): the INSERTs share one transaction, so a
+    duplicate roll number in row 9 rolls back rows 1-8 as well — the
+    section is never left half-filled. The pre-check in the route gives a
+    friendly error first; this constraint is the hard guarantee behind it
+    (UNIQUE(section_id, roll_number) in schema.sql), same belt-and-braces
+    pair as the single-student flow.
+
+    The executemany-style loop keeps one connection for all 15 rows
+    instead of 15 connect-per-query cycles — for a multi-row write, one
+    connection IS the transaction.
+    """
+    conn = db.get_connection()
+    ids = []
+    try:
+        with conn.cursor() as cur:
+            for row in rows:
+                cur.execute(
+                    """INSERT INTO students
+                       (name, roll_number, date_of_birth, contact, enrollment_date, section_id)
+                       VALUES (%s, %s, %s, %s, %s, %s)""",
+                    (row["name"], row["roll_number"], row["date_of_birth"],
+                     row["contact"], row["enrollment_date"], row["section_id"]),
+                )
+                ids.append(cur.lastrowid)
+        conn.commit()
+        return ids
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def get(student_id):
     """Return one student with section/batch names, or None."""
     return db.fetch_one(_BASE_SELECT + "WHERE s.id = %s", (student_id,))

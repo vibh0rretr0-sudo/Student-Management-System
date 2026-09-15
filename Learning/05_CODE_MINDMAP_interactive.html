@@ -38,6 +38,7 @@
 ### attendance.html — pick date, tick present
 ### grades.html — C++ results
 ### announcements.html / announcement_form — the notice board
+### student_bulk_form.html — 15-row grid, one shared section
 ### error.html — 400 / 403 / 404 / 500
 ### static/css/style.css — the ONLY paint
 #### flat JECRC red & white
@@ -57,9 +58,9 @@
 #### PermissionError → 403
 #### NotFound → 404
 
-## 🏗️ Page builders — backend/routes/ · 40 routes in 10 modules
+## 🏗️ Page builders — backend/routes/ · 41 routes in 10 modules
 ### dashboard_routes.py — home page + chart widths
-### student_routes.py — CRUD + search
+### student_routes.py — CRUD + search + bulk add (up to 15)
 ### course_routes.py — courses + no-double-booking rule
 ### assessment_routes.py — marks grids (true upsert)
 ### attendance_routes.py — marking + 75% eligibility

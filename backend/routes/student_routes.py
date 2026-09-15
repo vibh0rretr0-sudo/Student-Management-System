@@ -1,4 +1,4 @@
-"""Student list, search, add, edit, delete.
+"""Student list, search, add, edit, delete, and bulk add.
 
 Permission model (confirmed): all professors can view every student;
 editing/deleting requires the student to be enrolled in one of the
@@ -10,10 +10,15 @@ The create/edit pair shares one validator (_validated_student) and one
 uniqueness guard (roll_exists) — the only difference between the two
 flows is the exclusion id. That's the DRY shape worth pointing at.
 """
+from types import SimpleNamespace
+
 from backend.models import courses, students
 from backend.routes import template
 from backend.routes.helpers import Response, login_required, route
 from backend.routes.validation import parse_date, parse_int, require
+
+# Hard cap on one bulk submission (the brief: "up to 15").
+_BULK_MAX = 15
 
 
 @route("GET", "/students")
@@ -68,6 +73,93 @@ def student_create(request):
     if students.roll_exists(data["section_id"], data["roll_number"]):
         raise ValueError(f"Roll number '{data['roll_number']}' already exists in this section.")
     students.create(**data)
+    return Response.redirect("/students")
+
+
+@route("GET", "/students/bulk")
+@login_required
+def student_bulk_form(request):
+    """GET /students/bulk — 15-row grid for adding a section intake at once."""
+    body = template.render(
+        "student_bulk_form.html",
+        form_title="Add Students in Bulk",
+        section_options=_section_choices("") ,
+        rows_html=_bulk_rows_html(),
+        cancel_link="/students",
+    )
+    return Response.html(template.page(request, "Bulk Add Students", body, active="students"))
+
+
+@route("POST", "/students/bulk")
+@login_required
+def student_bulk_create(request):
+    """POST /students/bulk — validate every row, then insert all-or-nothing.
+
+    Two gates before the DB sees anything:
+      1. per-row validation via the SAME _validated_student used by the
+         single form (one rule, two surfaces), and
+      2. a duplicate pre-check inside the chosen section, so the professor
+         gets 'Row 4: roll 07 is already taken' instead of a raw DB error.
+    The insert itself is a single transaction (students.create_bulk), so a
+    failure can never leave a half-filled section.
+    """
+    section_id = parse_int(request.form.get("section_id"), "section", minimum=1)
+
+    # The shared date applies to every row — validate it once, up front,
+    # so one clean message replaces fifteen per-row repeats.
+    bulk_date = parse_date(request.form.get("bulk_enrollment_date"), "Enrollment date")
+    if bulk_date is None:
+        raise ValueError("Enrollment date is required — it applies to every row.")
+
+    rows, errors = [], []
+    for i in range(1, _BULK_MAX + 1):
+        name = request.form.get(f"name_{i}", "").strip()
+        roll = request.form.get(f"roll_{i}", "").strip()
+        if not name and not roll:
+            continue  # an entirely blank row is just an unused slot
+        if not name or not roll:
+            errors.append(f"Row {i}: fill in BOTH name and roll number (or leave both blank).")
+            continue
+
+        # Reuse the single-form validator by faking its request shape:
+        # it only reads .form, and the per-row contract (dates parsed,
+        # blanks to None) stays identical to the one-student flow.
+        try:
+            row = _validated_student(SimpleNamespace(form={
+                "name": name,
+                "roll_number": roll,
+                "section_id": str(section_id),
+                "enrollment_date": bulk_date.isoformat(),
+                "date_of_birth": request.form.get(f"dob_{i}", ""),
+                "contact": request.form.get(f"contact_{i}", ""),
+            }))
+        except ValueError as exc:
+            errors.append(f"Row {i}: {exc}")
+            continue
+        rows.append(row)
+
+    if len(rows) > _BULK_MAX:
+        errors.append(f"At most {_BULK_MAX} students per batch.")
+
+    # Duplicate rolls WITHIN this submission + against the section, with
+    # row numbers in the message — before any INSERT runs.
+    seen = {}
+    for idx, row in enumerate(rows):
+        r = row["roll_number"]
+        if r in seen:
+            errors.append(f"Row {idx + 1}: roll number '{r}' is repeated in this form (first used on row {seen[r] + 1}).")
+        else:
+            seen[r] = idx
+            if students.roll_exists(section_id, r):
+                errors.append(f"Row {idx + 1}: roll number '{r}' already exists in this section.")
+
+    if errors:
+        # ValueError listing renders as one friendly 400 page.
+        raise ValueError(" ".join(errors))
+    if not rows:
+        raise ValueError("Nothing to add — fill in at least one row (name and roll number).")
+
+    students.create_bulk(rows)
     return Response.redirect("/students")
 
 
@@ -268,6 +360,22 @@ def _section_choices(selected=""):
             f"<option value=\"{sec['id']}\"{sel}>{template.esc(sec['section_name'])}</option>"
         )
     return "".join(options)
+
+
+def _bulk_rows_html():
+    """The 15 input rows of the bulk grid (numbered for friendly errors)."""
+    out = []
+    for i in range(1, _BULK_MAX + 1):
+        out.append(
+            f"<tr style=\"--i:{i - 1}\">"
+            f"<td class=\"row-num\">{i}</td>"
+            f"<td><input type=\"text\" name=\"name_{i}\" maxlength=\"100\" placeholder=\"Full name\"></td>"
+            f"<td><input type=\"text\" name=\"roll_{i}\" maxlength=\"20\" placeholder=\"Roll no\"></td>"
+            f"<td><input type=\"date\" name=\"dob_{i}\"></td>"
+            f"<td><input type=\"text\" name=\"contact_{i}\" maxlength=\"20\" placeholder=\"Contact\"></td>"
+            "</tr>"
+        )
+    return "".join(out)
 
 
 def _delete_form_html(student_id, name):

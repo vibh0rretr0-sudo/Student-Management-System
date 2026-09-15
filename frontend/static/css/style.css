@@ -426,6 +426,15 @@ input:focus, select:focus, textarea:focus {
 }
 .form-card { max-width: 580px; }
 .form-actions { display: flex; gap: .6rem; margin-top: .9rem; flex-wrap: wrap; }
+
+/* Bulk add: shared fields row + the numbered 15-row grid. Reuses
+   .data-table for the flat look; inputs stay compact like .marks-input. */
+.head-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+.bulk-shared { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: .4rem; }
+.bulk-shared .field { flex: 1 1 220px; }
+.bulk-grid td { padding: .3rem .5rem; }
+.bulk-grid .row-num { width: 2.2rem; text-align: right; color: var(--text-soft); font-size: .85rem; }
+.bulk-grid input[type="text"], .bulk-grid input[type="date"] { width: 100%; min-width: 7rem; }
 .row-form { display: flex; gap: .8rem; flex-wrap: wrap; align-items: flex-end; }
 .row-form .field { margin-bottom: 0; min-width: 140px; }
 .row-form .field-wide { flex: 1 1 220px; }

@@ -1,0 +1,32 @@
+<!-- Purpose: bulk add — one shared section + enrollment date, then a
+     numbered 15-row grid (name/roll per row; DOB and contact optional).
+     Entirely blank rows are simply unused slots; the server re-validates
+     every row and rejects the whole batch on any error. -->
+<section class="card form-card" style="--i:0">
+  <h2>{{form_title}}</h2>
+  <form method="post" action="/students/bulk">
+    <div class="bulk-shared">
+      <label class="field">
+        <span>Section (applies to every row)</span>
+        <select name="section_id" required>{{section_options}}</select>
+      </label>
+      <label class="field">
+        <span>Enrollment date (applies to every row)</span>
+        <input type="date" name="bulk_enrollment_date" required>
+      </label>
+    </div>
+
+    <table class="data-table bulk-grid">
+      <thead>
+        <tr><th>#</th><th>Full name</th><th>Roll number</th><th>Date of birth</th><th>Contact</th></tr>
+      </thead>
+      <tbody>{{rows_html}}</tbody>
+    </table>
+    <small class="hint">Fill up to 15 rows — leave a row fully blank to skip it. Roll numbers must be unique within the section; the whole batch is saved together or not at all.</small>
+
+    <div class="form-actions">
+      <button type="submit" class="btn">Save all</button>
+      <a class="btn btn-ghost" href="{{cancel_link}}">Cancel</a>
+    </div>
+  </form>
+</section>

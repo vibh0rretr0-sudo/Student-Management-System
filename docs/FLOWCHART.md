@@ -122,7 +122,7 @@ flowchart LR
     subgraph storage["storage + presentation"]
         SQL["MySQL 'sms'<br/>9 tables"]
         CSS["style.css"]
-        TMPL["16 templates"]
+        TMPL["17 templates"]
     end
 
     SRV --> HLP
