@@ -15,6 +15,7 @@ import html
 from pathlib import Path
 
 from backend import config
+from backend.routes.pref_routes import body_class
 
 LAYOUT = "layout.html"
 
@@ -48,7 +49,7 @@ NAV_LINKS = [
     ("/dashboard", "Dashboard", "dashboard"),
     ("/courses", "Courses", "courses"),
     ("/students", "Students", "students"),
-    ("/rankings", "Rankings", "rankings"),
+    ("/announcements", "Announcements", "announcements"),
 ]
 
 
@@ -73,4 +74,7 @@ def page(request, title, content, active=""):
         nav="".join(nav_html),
         username=username,
         page_title=esc(title),
+        # Server-rendered theme: the cookie is read on THIS request, so the
+        # correct theme paints on first byte — no flash of wrong theme.
+        body_class=body_class(request),
     )

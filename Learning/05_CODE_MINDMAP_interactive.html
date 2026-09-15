@@ -36,11 +36,12 @@
 ### courses.html / course_form / course_detail
 ### assignments.html / exams.html — marks grids
 ### attendance.html — pick date, tick present
-### grades.html / rankings.html — C++ results
+### grades.html — C++ results
+### announcements.html / announcement_form — the notice board
 ### error.html — 400 / 403 / 404 / 500
 ### static/css/style.css — the ONLY paint
 #### flat JECRC red & white
-#### dark mode: checkbox + :has() — zero JS
+#### dark mode: a cookie + body.dark — zero JS
 #### gentle animations: rise-in, count-up
 
 ## 🚪 The door — backend/server.py
@@ -56,13 +57,15 @@
 #### PermissionError → 403
 #### NotFound → 404
 
-## 🏗️ Page builders — backend/routes/ · 35 routes in 8 modules
+## 🏗️ Page builders — backend/routes/ · 40 routes in 10 modules
 ### dashboard_routes.py — home page + chart widths
 ### student_routes.py — CRUD + search
 ### course_routes.py — courses + no-double-booking rule
 ### assessment_routes.py — marks grids (true upsert)
 ### attendance_routes.py — marking + 75% eligibility
-### analytics_routes.py — grades + rankings
+### analytics_routes.py — grades page
+### announcement_routes.py — publish / list / download / delete-your-own
+### pref_routes.py — remembers dark-or-light in a 1-year cookie
 ### auth_routes.py — login/logout
 ### static_routes.py — serves style.css safely
 
@@ -73,6 +76,7 @@
 ### courses.py — sections, enrollment, timetable check
 ### assessments.py — ONE table for assignments + exams + marks
 ### attendance.py — one row per student per day
+### announcements.py — notices + attachments, owner-only delete
 ### stats.py — dashboard averages
 
 ## 🔐 The vault — backend/auth.py
@@ -82,15 +86,14 @@
 
 ## 🧮 Calculator room — cpp_module/
 ### cpp_engine.py — packs TSV in, unpacks answers
-### sms_engine.cpp — one binary, 3 modes
+### sms_engine.cpp — one binary, 2 modes
 #### grades: 50% coursework + 50% exams, pass ≥ 40
 #### attendance: eligible at ≥ 75
-#### rank: ties share a rank (1-2-2-4)
 ### tests/ — hand-computed fixtures = proof
 
 ## 🗃️ Filing cabinet — backend/db/
-### schema.sql — 9 tables, 12 foreign keys, cascade deletes
-### seed.sql — 2 professors, 2 sections, 8 students
+### schema.sql — 11 tables, 15 foreign keys, cascade deletes
+### seed.sql — 2 professors, 2 sections, 8 students, 2 sample notices
 
 ## 🧰 Setup — scripts/
 ### setup_db.py — database + limited app user

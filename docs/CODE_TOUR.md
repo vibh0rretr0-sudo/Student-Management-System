@@ -52,9 +52,11 @@ backend/
     course_routes.py     courses + enrollment, owner-gated
     assessment_routes.py assignments/exams + marks grids
     attendance_routes.py marking page + eligibility summary
-    analytics_routes.py  grades / course rank / section rankings
+    analytics_routes.py  grades (C++-computed, owner-gated persistence)
+    announcement_routes.py announcements: publish + attachment download
+    pref_routes.py       theme cookie (server-rendered dark mode)
 cpp_module/
-  src/sms_engine.cpp  the engine: grades | attendance | rank modes
+  src/sms_engine.cpp  the engine: grades | attendance modes
   tests/              fixture inputs; outputs are hand-verified values
 scripts/
   setup_db.py         root-only setup: creates sms DB + least-privilege sms_app
@@ -84,11 +86,12 @@ scripts/
    two CROSS JOINs for course-wide denominators ("conducted"
    assessments), two LEFT JOINs for each student's percentage sums,
    `COALESCE` for the confirmed missing = 0 rule.
-8. **`cpp_engine.compute_grades()`** — the bridge pattern all three
+8. **`cpp_engine.compute_grades()`** — the bridge pattern both
    wrappers share: build stdin lines, run, merge results back by
    `student_id`. Note `_clean()` neutralizing tabs in names.
-9. **`sms_engine.cpp :: run_rank()`** — deterministic sort (final %
-   desc, roll asc) plus competition ranking (1, 2, 2, 4) in one pass.
+9. **`helpers._parse_multipart()`** — file uploads without a framework:
+   the stdlib email parser splits multipart/form-data (MIME is the
+   format), so announcement attachments arrive as plain dicts.
 10. **`dashboard_routes._attendance_chart_html()`** — the CSS contract:
     Python emits `--w` (bar width) and `--i` (stagger index); the
     stylesheet animates them. The 75%-threshold marker renders only on

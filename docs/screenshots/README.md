@@ -7,7 +7,7 @@ Screenshots table. To re-capture them, keep these exact names:
 - `dashboard.png` — dashboard with cards + charts
 - `grades.png` — course grades page (C++ output)
 - `attendance.png` — attendance marking + eligibility summary
-- `rankings.png` — section rankings
+- `announcements.png` — announcements tab with attachment chips
 - `marks.png` — assignments/exams marks-entry grid
 
 Tip: Windows `Win+Shift+S`, crop to the browser content, save into this

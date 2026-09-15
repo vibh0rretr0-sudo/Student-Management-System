@@ -1,6 +1,6 @@
 # Student Management System (SMS)
 
-A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and rankings — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
+A Student Management System for professors: courses, enrollments, students, assignments, exams, marks, grades, attendance, and official announcements with attachments — built end-to-end on a deliberately framework-free stack: **HTML/CSS frontend + plain-Python backend (`http.server`) + C++ compute engine (subprocess) + MySQL**. No JavaScript, no frameworks, no templating libraries — every layer is hand-written and explainable.
 
 > Full documentation lives in [`docs/`](docs/): the project [overview](docs/OVERVIEW.md) (purpose, architecture, key decisions, known limitations), a beginner-friendly [flow diagram](docs/flow-diagram.png) + [flowchart](docs/FLOWCHART.md) (how a click becomes a page — no programming knowledge needed), MySQL setup, UI guide, and a guided [code tour](docs/CODE_TOUR.md).
 >
@@ -14,7 +14,7 @@ A Student Management System for professors: courses, enrollments, students, assi
 
 ## Why this project
 
-Most first-semester projects hide behind a framework. This one doesn't: routing, form parsing, sessions, password hashing, HTML templating, and even the dashboard charts are written from scratch — so every line can be explained in a viva or interview. The C++ module is scoped to exactly three computations (grades, attendance eligibility, ranking) so there's a crisp answer to *"why C++ here?"*.
+Most first-semester projects hide behind a framework. This one doesn't: routing, form parsing (including multipart file uploads), sessions, password hashing, HTML templating, and even the dashboard charts are written from scratch — so every line can be explained in a viva or interview. The C++ module is scoped to exactly two computations (grades, attendance eligibility) so there's a crisp answer to *"why C++ here?"*.
 
 ## Tech Stack
 
@@ -22,8 +22,8 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 |---|---|---|
 | Frontend | HTML, CSS | 16 semantic templates, one stylesheet, CSS-only charts, zero JS |
 | Backend | Python (stdlib `http.server`) | Regex routing, form parsing, PBKDF2 auth, sessions, validation |
-| Compute | C++ (`sms_engine`) | Grade %, attendance eligibility, section ranking — via subprocess |
-| Data | SQL on MySQL 8 | 9 tables, 3NF, parameterized queries via PyMySQL |
+| Compute | C++ (`sms_engine`) | Grade %, attendance eligibility — via subprocess |
+| Data | SQL on MySQL 8 | 11 tables, 3NF, parameterized queries via PyMySQL |
 
 ## Features
 
@@ -34,7 +34,8 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
 - Assignments & exams with per-student marks-entry grids (marks validated against max)
 - **Grades via C++**: final % = 50% assignments + 50% exams (only *conducted* assessments count), Pass ≥ 40%
 - **Attendance via C++**: per-course %, hard 75% eligibility cutoff, marked per session date
-- **Rankings via C++**: students ranked within their section by overall %, roll number as tie-break, shared ranks for ties
+- **Announcements**: professors publish official notices (institute-wide or per-section) with optional attachments — server-side audience scoping, author-only delete, byte-safe downloads
+- **Persistent theme**: dark-mode toggle saved in a cookie server-side — the choice survives tab switches and restarts, still with zero JavaScript
 - Dashboard with summary cards and **pure CSS bar charts** (grade distribution, attendance by course)
 
 ## Architecture
@@ -53,11 +54,11 @@ Most first-semester projects hide behind a framework. This one doesn't: routing,
             │ subprocess (TSV over stdin/stdout)
 ┌───────────▼─────────────┐      ┌──────────────────────┐
 │  C++ sms_engine         │      │  Data (MySQL 8)      │
-│  grades|attendance|rank │      │  9 tables, 3NF       │
+│  grades|attendance      │      │  11 tables, 3NF      │
 └─────────────────────────┘      └──────────────────────┘
 ```
 
-**C++ integration:** Python queries MySQL, feeds the compiled binary TSV on stdin, parses its stdout back. `sms_engine` runs in three modes (`grades`, `attendance`, `rank`) — see `cpp_module/README.md` for the exact wire format.
+**C++ integration:** Python queries MySQL, feeds the compiled binary TSV on stdin, parses its stdout back. `sms_engine` runs in two modes (`grades`, `attendance`) — see `cpp_module/README.md` for the exact wire format.
 
 ## Project Structure
 
@@ -104,8 +105,8 @@ Demo logins (from seed data): `vibhor / prof123` (owns 4 courses) and `sharma / 
 | ![](docs/screenshots/login.png) | ![](docs/screenshots/dashboard.png) |
 | **Grades — computed by the C++ engine** | **Attendance & 75% eligibility (C++)** |
 | ![](docs/screenshots/grades.png) | ![](docs/screenshots/attendance.png) |
-| **Section rankings (C++)** | **Marks entry grid** |
-| ![](docs/screenshots/rankings.png) | ![](docs/screenshots/marks.png) |
+| **Announcements + attachments** | **Marks entry grid** |
+| ![](docs/screenshots/announcements.png) | ![](docs/screenshots/marks.png) |
 
 ## What I built & learned
 

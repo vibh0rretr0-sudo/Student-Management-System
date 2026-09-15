@@ -1,0 +1,31 @@
+<!-- Purpose: publish-announcement form. enctype=multipart is what makes
+     the file input actually upload bytes (the default urlencoded form
+     cannot carry files); the server splits the parts in helpers.py.
+     Audience: institute-wide by default, or one of YOUR sections. -->
+<section class="card form-card" style="--i:0">
+  <h2>{{form_title}}</h2>
+  <form method="post" action="{{action}}" enctype="multipart/form-data">
+    <label class="field">
+      <span>Title</span>
+      <input type="text" name="title" value="{{title_value}}" required maxlength="150">
+    </label>
+    <label class="field">
+      <span>Audience</span>
+      <select name="section_id">{{section_options}}</select>
+      <small>Institute-wide notices reach every professor; section notices only reach that section's teachers.</small>
+    </label>
+    <label class="field">
+      <span>Message</span>
+      <textarea name="body" rows="6" required>{{body_value}}</textarea>
+    </label>
+    <label class="field">
+      <span>Attachment (optional)</span>
+      <input type="file" name="attachment" accept=".pdf,.png,.jpg,.jpeg,.gif,.txt">
+      <small>PDF, image, or text — up to 5 MB. Re-publishing replaces nothing: one file per announcement.</small>
+    </label>
+    <div class="form-actions">
+      <button type="submit" class="btn">{{submit_label}}</button>
+      <a class="btn btn-ghost" href="{{cancel_link}}">Cancel</a>
+    </div>
+  </form>
+</section>

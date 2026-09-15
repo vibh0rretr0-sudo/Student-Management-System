@@ -9,5 +9,7 @@ Each module registers its URL patterns on the shared dispatcher. Handlers receiv
 - `assessment_routes.py` — assignments, exams, marks entry
 - `attendance_routes.py` — attendance marking
 - `dashboard_routes.py` — dashboard with CSS-only charts
-- `analytics_routes.py` — grades/attendance/rankings pages powered by the C++ engine
+- `analytics_routes.py` — grades pages powered by the C++ engine
+- `announcement_routes.py` — announcements: publish with attachment, download, author-only delete
+- `pref_routes.py` — theme preference cookie (POST /prefs/theme)
 - `static_routes.py` — serves `frontend/static/*` (path-containment defense)

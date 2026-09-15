@@ -6,7 +6,7 @@
 -- Design notes:
 --  * All tables InnoDB + utf8mb4, snake_case plural names.
 --  * 3NF: no repeating groups, every non-key column depends on the key.
---  * 9 tables. Assignments and exams are ONE table (`assessments.kind`),
+--  * 11 tables. Assignments and exams are ONE table (`assessments.kind`),
 --    their marks are ONE table (`marks`) — the two kinds share the exact
 --    same shape (owner course, title, max marks, date), so splitting them
 --    duplicated every constraint and query for no benefit. A student's
@@ -16,6 +16,10 @@
 --    in marks/attendance.
 --  * Marks-vs-max validation (marks_obtained <= max_marks) is enforced
 --    in the application layer; a CHECK cannot reference another table.
+--  * Announcements store attachment bytes in the row (MEDIUMBLOB, 5 MB
+--    cap enforced by the upload route): for a classroom-scale app this
+--    keeps backup = dump-files, no external storage to explain. A file
+--    store on disk would be the first scaling refactor.
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS sms CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -151,4 +155,37 @@ CREATE TABLE attendance (
     INDEX idx_attendance_course_date (course_id, date),
     FOREIGN KEY (student_id) REFERENCES students (id) ON DELETE CASCADE,
     FOREIGN KEY (course_id)  REFERENCES courses (id)  ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- ---------- Announcements (official notices, professor-authored) ----------
+-- Audience is a SECTION (SN1/SN2) or ALL (NULL section_id = institute-
+-- wide). FK to sections (not a string) so renaming a section can't
+-- orphan an announcement and the audience list is always joinable.
+
+CREATE TABLE announcements (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    professor_id INT UNSIGNED NOT NULL,            -- author (the only deleter)
+    section_id  INT UNSIGNED NULL,                 -- NULL = institute-wide
+    title       VARCHAR(150) NOT NULL,
+    body        TEXT NOT NULL,
+    published_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    INDEX idx_announcements_recent (published_at),
+    FOREIGN KEY (professor_id) REFERENCES professors (id) ON DELETE CASCADE,
+    FOREIGN KEY (section_id)   REFERENCES sections (id)   ON DELETE CASCADE
+) ENGINE = InnoDB;
+
+-- One attachment per announcement (the upload replaces any previous
+-- one). Bytes live here: 5 MB cap is route-enforced; MEDIUMBLOB holds
+-- up to 16 MB, so the cap never trips the column limit.
+
+CREATE TABLE announcement_attachments (
+    id              INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    announcement_id INT UNSIGNED NOT NULL,
+    filename        VARCHAR(255) NOT NULL,
+    mime_type       VARCHAR(100) NOT NULL,
+    file_bytes      MEDIUMBLOB NOT NULL,
+    size_bytes      INT UNSIGNED NOT NULL,
+    uploaded_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY uq_attachment (announcement_id),    -- one file per announcement
+    FOREIGN KEY (announcement_id) REFERENCES announcements (id) ON DELETE CASCADE
 ) ENGINE = InnoDB;

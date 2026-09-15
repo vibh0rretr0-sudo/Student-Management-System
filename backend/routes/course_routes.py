@@ -311,13 +311,12 @@ def _enroll_section_html(course_id, enrollable):
 
 
 def _owner_links_html(course_id):
-    """The owner's action-button row (marks, attendance, grades, rank, edit)."""
+    """The owner's action-button row (marks, attendance, grades, edit)."""
     return (
         f"<a class=\"btn\" href=\"/courses/{course_id}/assignments\">Assignments &amp; marks</a> "
         f"<a class=\"btn\" href=\"/courses/{course_id}/exams\">Exams &amp; marks</a> "
         f"<a class=\"btn\" href=\"/courses/{course_id}/attendance\">Attendance</a> "
         f"<a class=\"btn\" href=\"/courses/{course_id}/grades\">Grades (C++)</a> "
-        f"<a class=\"btn\" href=\"/courses/{course_id}/rank\">Course rank (C++)</a> "
         f"<a class=\"btn btn-ghost\" href=\"/courses/{course_id}/edit\">Edit course</a>"
     )
 

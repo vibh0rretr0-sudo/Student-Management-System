@@ -46,6 +46,9 @@ def logout(request):
 def template_login(request, error):
     """Render the standalone login page with an optional error banner."""
     from backend.routes import template
+    from backend.routes.pref_routes import body_class
 
     shown = f'<p class="login-error">{template.esc(error)}</p>' if error else ""
-    return template.render("login.html", error=shown)
+    # The login page honors the theme cookie too (class on <html>, same
+    # hook the app layout uses) — the preference applies everywhere.
+    return template.render("login.html", error=shown, body_class=body_class(request))

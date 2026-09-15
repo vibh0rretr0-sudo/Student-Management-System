@@ -1,13 +1,12 @@
 // ============================================================
 // sms_engine.cpp — compute engine for the Student Management System
 //
-// One binary, three modes (chosen by argv[1]); all input arrives as
+// One binary, two modes (chosen by argv[1]); all input arrives as
 // tab-separated text on stdin and all results are printed as
 // tab-separated text on stdout (wire format in cpp_module/README.md):
 //
 //   grades      final % = 50% assignment avg + 50% exam avg, Pass >= 40
 //   attendance  per-course %, eligible at >= 75%
-//   rank        students ranked within a section by final %
 //
 // Python (backend/cpp_engine.py) collects raw data from MySQL and owns
 // persistence; this module is pure computation on in-memory data.
@@ -178,45 +177,6 @@ int run_attendance(std::istream& in) {
     return 0;
 }
 
-// ---------- mode: rank ----------
-// Ranking = one sort plus one pass.
-//   * std::sort / std::stable_sort: O(n log n) comparisons.
-//   * Ordering: final % descending; ties broken by roll number
-//     ascending (numeric-aware when both rolls are numeric), so the
-//     output is fully deterministic.
-//   * Equal final % share the same rank (competition ranking:
-//     1, 2, 2, 4), so the tie-break only fixes display order.
-bool roll_less(const std::string& a, const std::string& b) {
-    int na = 0, nb = 0;
-    if (to_int(a, na) && to_int(b, nb)) return na < nb;
-    return a < b;
-}
-
-int run_rank(std::istream& in) {
-    std::vector<GradeRecord> records = read_grade_records(in);
-    std::stable_sort(records.begin(), records.end(),
-                     [](const GradeRecord& a, const GradeRecord& b) {
-                         const double fa = a.final_pct();
-                         const double fb = b.final_pct();
-                         if (fa != fb) return fa > fb;   // higher % first
-                         return roll_less(a.roll, b.roll);  // deterministic tie order
-                     });
-
-    // Competition ranking: the first row is rank 1; a row whose score
-    // equals the previous row keeps that rank (1, 2, 2, 4 ...); any new
-    // score takes its 1-based position as the rank.
-    int current_rank = 1;
-    for (std::size_t i = 0; i < records.size(); ++i) {
-        if (i == 0 || records[i].final_pct() != records[i - 1].final_pct()) {
-            current_rank = static_cast<int>(i) + 1;
-        }
-        std::cout << current_rank << '\t'
-                  << records[i].student_id << '\t'
-                  << pct(records[i].final_pct()) << '\n';
-    }
-    return 0;
-}
-
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -225,13 +185,12 @@ int main(int argc, char* argv[]) {
     // Exit-code contract (what backend/cpp_engine.py relies on):
     //   0 = success, 1 = bad data, 2 = usage error (wrong/no mode).
     if (argc != 2) {
-        std::cerr << "usage: sms_engine <grades|attendance|rank>\n";
+        std::cerr << "usage: sms_engine <grades|attendance>\n";
         return 2;
     }
     const std::string mode = argv[1];
     if (mode == "grades") return run_grades(std::cin);
     if (mode == "attendance") return run_attendance(std::cin);
-    if (mode == "rank") return run_rank(std::cin);
     std::cerr << "unknown mode: " << mode << "\n";
     return 2;
 }

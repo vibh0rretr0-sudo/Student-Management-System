@@ -18,7 +18,7 @@ flowchart TD
     A["① YOU<br/>you click a link in your browser"] --> B["② THE FRONT DESK<br/>greets every request and passes it on"]
     B --> C["③ THE SORTING OFFICE<br/>reads the address of your click and<br/>picks the one worker who builds that page"]
     C --> D["④ THE FILING CABINET<br/>fetch the facts — students, marks, attendance"]
-    C --> E["⑤ THE CALCULATOR ROOM<br/>run the math — grades, %, rankings"]
+    C --> E["⑤ THE CALCULATOR ROOM<br/>run the math — grades, %"]
     D --> F["⑥ THE PRINTING PRESS<br/>fill a page with the answers and paint it"]
     E --> F
     F --> G["⑦ BACK TO YOU<br/>the finished page appears in your browser"]
@@ -28,9 +28,9 @@ flowchart TD
 |---|---|---|
 | ① You | You open the app and click a link or button. Any modern browser works — nothing to install on your machine. | — |
 | ② The front desk | Greets every request that arrives and hands it to the right helper. If you're not logged in yet, it sends you to the login page first. | `backend/server.py` |
-| ③ The sorting office | Reads the *address* of your click (the part after `/` in the URL) and picks the one worker who builds that kind of page. There are 8 workers: dashboard, students, courses, marks, attendance, rankings, login, and style files. | `backend/routes/helpers.py` |
+| ③ The sorting office | Reads the *address* of your click (the part after `/` in the URL) and picks the one worker who builds that kind of page. There are 8 workers: dashboard, students, courses, marks, attendance, announcements, login, and style files. | `backend/routes/helpers.py` |
 | ④ The filing cabinet | Every fact the app knows lives here in labeled drawers: students, courses, who teaches what, who studies what, marks, attendance, grades. The workers only *ask* for facts — they never rummage themselves. | MySQL database, via `backend/models/` |
-| ⑤ The calculator room | Some pages need math, not just facts: final grades (50% coursework + 50% exams), attendance % (eligible at 75%), class rankings. A separate mini-program written in C++ does this — marks go in, answers come out. | `cpp_module/sms_engine`, fed by `backend/cpp_engine.py` |
+| ⑤ The calculator room | Some pages need math, not just facts: final grades (50% coursework + 50% exams), attendance % (eligible at 75%). A separate mini-program written in C++ does this — marks go in, answers come out. | `cpp_module/sms_engine`, fed by `backend/cpp_engine.py` |
 | ⑥ The printing press | Fills a blank page with the answers, then paints it in the app's red-and-white style. | `frontend/templates/` + `frontend/static/css/style.css` |
 | ⑦ Back to you | The finished page appears in your browser. Every click runs this same loop again. | — |
 
@@ -47,9 +47,9 @@ Both are already done on this machine.
 | Front desk | `backend/server.py` | Listens for visitors, one thread per request |
 | Sorting office | `backend/routes/helpers.py` | Matches the URL to the right worker, attaches your login |
 | The 8 workers | `backend/routes/*_routes.py` | Each builds one kind of page |
-| Filing cabinet drawers | the 9 tables in `backend/db/schema.sql` | professors, sections, students, courses, enrollments, assessments, marks, grades, attendance |
+| Filing cabinet drawers | the 11 tables in `backend/db/schema.sql` | professors, sections, students, courses, enrollments, assessments, marks, grades, attendance, announcements (+ attachments) |
 | Cabinet clerks | `backend/models/*.py` | The only code allowed to fetch/store facts |
-| Calculator | `cpp_module/src/sms_engine.cpp` | Grades, attendance %, rankings — pure math, no storage |
+| Calculator | `cpp_module/src/sms_engine.cpp` | Grades, attendance % — pure math, no storage |
 | Calculator operator | `backend/cpp_engine.py` | Hands data to the calculator, collects answers |
 | Printing press | `backend/routes/template.py` + `frontend/templates/` | Fills page layouts with data |
 | The paint | `frontend/static/css/style.css` | The red-and-white look |
@@ -74,7 +74,7 @@ flowchart TD
     C --> D["④ route module handler<br/>dashboard · students · courses · assessments ·<br/>attendance · analytics · static · auth"]
     D --> E["⑤ backend/models/*<br/>parameterized SQL via db.py → MySQL"]
     E --> F{"does the page<br/>need computation?"}
-    F -- "grades / rank / attendance %" --> G["⑥ backend/cpp_engine.py<br/>TSV rows → sms_engine.exe → results"]
+    F -- "grades / attendance %" --> G["⑥ backend/cpp_engine.py<br/>TSV rows → sms_engine.exe → results"]
     F -- "no" --> H
     G --> H["⑦ routes/template.py<br/>fills the template with data"]
     H --> I["⑧ Response (HTML + style.css)<br/>written back to the socket"]
@@ -148,7 +148,7 @@ flowchart LR
     ATT --> DB
     STA --> DB
     ATR -->|"eligibility %"| ENG
-    ANR -->|"grades · rank"| ENG
+    ANR -->|"grades"| ENG
     ENG --> BIN
     DB --> SQL
     TMPL -->|"wrapped by layout.html"| HLP
@@ -165,7 +165,7 @@ flowchart LR
 3. **Only `models/db.py` knows the connection parameters** (via
    `backend/config.py`). No other module opens a database connection.
 4. **Only two workers know the calculator exists:** `attendance_routes`
-   (eligibility %) and `analytics_routes` (grades + rankings). `cpp_engine.py`
+   (eligibility %) and `analytics_routes` (grades). `cpp_engine.py`
    hides the details: tab-separated text in, results out, 30-second timeout,
    a friendly error if the calculator was never built.
 5. **Ownership checks live in the models, not the UI.** `courses.get_owned()`
@@ -187,4 +187,4 @@ flowchart LR
 6. `server.py` writes the HTML; browser pulls `style.css`
 
 Attendance is the same shape with `attendance.py` + mode `attendance`
-(eligible at ≥ 75%), rankings with mode `rank`.
+(eligible at ≥ 75%).

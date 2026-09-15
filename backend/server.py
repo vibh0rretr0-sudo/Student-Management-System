@@ -30,9 +30,11 @@ from backend import config  # noqa: E402
 import backend.routes  # noqa: E402,F401  (importing registers every route)
 from backend.routes.helpers import Request, dispatch  # noqa: E402
 
-# Reject bodies over ~1 MB: form posts here are tiny, and the cap stops
-# a rogue client from exhausting memory (a hand-rolled DoS guard).
-MAX_BODY_BYTES = 1_000_000
+# Reject bodies over ~5 MB: regular form posts are tiny; the headroom
+# exists for announcement attachments (capped at 5 MB by the whitelist
+# route too — this is the protocol-level backstop that stops a rogue
+# client from exhausting memory before any route even runs).
+MAX_BODY_BYTES = 5_000_000
 
 
 class SMSHandler(BaseHTTPRequestHandler):
@@ -72,12 +74,15 @@ class SMSHandler(BaseHTTPRequestHandler):
         # decodes ONLY the path (e.g. /students/6), leaving ?a=b&c=d intact
         # for the handler to parse.
         parsed = urllib.parse.urlsplit(self.path)
-        body = ""
+        # Raw BYTES, deliberately not decoded: url-encoded forms decode to
+        # text inside Request (the common case), multipart uploads must
+        # stay bytes so files (PDFs, images) survive intact.
+        body = b""
         length = int(self.headers.get("Content-Length") or 0)
         if length:
             if length > MAX_BODY_BYTES:
                 raise _BodyTooLarge()
-            body = self.rfile.read(length).decode("utf-8", errors="replace")
+            body = self.rfile.read(length)
         return Request(
             self.command,
             urllib.parse.unquote(parsed.path),

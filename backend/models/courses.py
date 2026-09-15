@@ -18,6 +18,17 @@ def list_sections():
     )
 
 
+def sections_taught_by(professor_id):
+    """Distinct sections this professor teaches (for announcement audiences)."""
+    return db.fetch_all(
+        """SELECT DISTINCT sec.id, sec.section_name, sec.batch_name
+           FROM courses c JOIN sections sec ON sec.id = c.section_id
+           WHERE c.professor_id = %s
+           ORDER BY sec.batch_name, sec.section_name""",
+        (professor_id,),
+    )
+
+
 def list_for_professor(professor_id):
     """The professor's courses with enrollment counts, soonest slot first."""
     return db.fetch_all(

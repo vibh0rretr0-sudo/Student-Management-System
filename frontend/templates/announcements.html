@@ -1,0 +1,12 @@
+<!-- Purpose: Announcements tab — audience-scoped list, newest first.
+     Each card: title, audience/author/date meta line, body, attachment
+     chip, and a Delete button ONLY for the author (the model enforces
+     it again on POST — hiding the button is not the security). -->
+<section class="card" style="--i:0">
+  <div class="form-actions" style="justify-content: space-between; align-items: center;">
+    <h2 style="margin: 0;">Official announcements</h2>
+    <a class="btn" href="/announcements/new">+ Publish announcement</a>
+  </div>
+</section>
+{{rows}}
+{{empty}}

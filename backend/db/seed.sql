@@ -103,3 +103,23 @@ INSERT INTO attendance (student_id, course_id, date, status) VALUES
     (6, 2, '2026-08-05', 'present'), (7, 2, '2026-08-05', 'present'), (8, 2, '2026-08-05', 'present'),
     (6, 2, '2026-08-12', 'present'), (7, 2, '2026-08-12', 'absent'),  (8, 2, '2026-08-12', 'present'),
     (6, 2, '2026-08-19', 'absent'),  (7, 2, '2026-08-19', 'present'), (8, 2, '2026-08-19', 'present');
+
+-- ---------- Announcements (demo content for the Announcements tab) ----------
+-- One institute-wide notice from each professor; the seeded attachments
+-- are tiny hand-built files so the download link works out of the box.
+
+INSERT INTO announcements (id, professor_id, section_id, title, body, published_at) VALUES
+    (1, 1, NULL, 'Welcome to Semester 1',
+     'Classes for all SN sections begin Monday. Timetables are final — check your Courses tab for rooms and slots. Attendance eligibility (75%) applies from the first session.',
+     '2026-09-01 09:00:00'),
+    (2, 2, NULL, 'Library hours extended',
+     'The central library stays open until 20:00 throughout the exam month. Carry your student ID.',
+     '2026-09-05 12:30:00');
+
+-- Attachment for announcement 1: a tiny timetable text file (the bytes
+-- below are the literal file content, inserted as a hex literal so the
+-- seed stays pure ASCII and newline-agnostic across editors/OSes).
+INSERT INTO announcement_attachments (announcement_id, filename, mime_type, file_bytes, size_bytes) VALUES
+    (1, 'week1-timetable.txt', 'text/plain',
+     0x5765656B2031202D20534E2073656D6573746572203120696E737469747574652074696D657461626C652E0A436865636B20796F757220436F75727365732074616220666F72207065722073656374696F6E20736C6F74732E,
+     89);

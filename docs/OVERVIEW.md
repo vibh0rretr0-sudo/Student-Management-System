@@ -13,7 +13,7 @@ grades, attendance — with spreadsheets or paper registers: slow,
 error-prone, and hard to search. This project centralizes that data in a
 proper relational database and gives staff a simple web interface to
 manage it: courses, enrollments, students, assignments, exams, marks,
-grades, attendance, and rankings.
+grades, attendance, and official announcements with attachments.
 
 **Users:** professors only — one role, multiple accounts. Each professor
 manages the courses, students, marks, and attendance of their own
@@ -37,7 +37,7 @@ courses. There is no student login and no admin role in v1.
 4. Assignment tracking with per-student marks
 5. Grades — computed by the C++ engine from assignment + exam marks
 6. Attendance — present/absent marking; C++ computes % and 75% eligibility
-7. Ranking students by performance (C++)
+7. Announcements — institute-wide or per-section notices with attachments
 8. Dashboard with summary stats and CSS-only charts
 
 **Scope note:** students belong to sections (SN1, SN2) under a batch
@@ -63,7 +63,7 @@ No JavaScript, no frameworks, no templating libraries.
 └───────────┬────────┬──────┘
             │        │ subprocess call
             │  ┌─────▼─────┐
-            │  │ C++ Module │  grades / attendance / ranking
+            │  │ C++ Module │  grades / attendance
             │  └───────────┘
 ┌───────────▼──────────────┐
 │   Data Layer               │  SQL queries → MySQL (RDBMS)
@@ -79,10 +79,10 @@ No JavaScript, no frameworks, no templating libraries.
   `http.server`, form parsing, PBKDF2 password hashing, sessions,
   validation, and HTML rendered by hand (template files with
   `{{placeholder}}` substitution — no template engine).
-- **C++** is deliberately scoped to three well-defined computations —
-  grade calculation, attendance eligibility, ranking — invoked via
+- **C++** is deliberately scoped to two well-defined computations —
+  grade calculation and attendance eligibility — invoked via
   subprocess over stdin/stdout with a TSV text protocol. One binary,
-  three modes: `sms_engine grades|attendance|rank`.
+  two modes: `sms_engine grades|attendance`.
 - **MySQL** is the single source of truth; Python keeps no data in memory
   beyond a request.
 

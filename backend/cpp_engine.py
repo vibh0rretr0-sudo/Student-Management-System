@@ -2,11 +2,10 @@
 
 Python collects raw data from MySQL, feeds it to the compiled binary as
 tab-separated text on stdin, and parses the engine's stdout (see
-cpp_module/README.md for the exact wire format). All three confirmed
+cpp_module/README.md for the exact wire format). The two confirmed
 computations live in the C++ binary:
   - grades:     final % = 50% assignments + 50% exams, Pass >= 40
   - attendance: per-course %, eligible at >= 75%
-  - rank:       rank students within a section by final %
 
 WHY SUBPROCESS + TSV (viva answer): the split keeps each side in the
 language it belongs in — Python does I/O and MySQL, C++ does pure
@@ -71,7 +70,7 @@ def compute_grades(rows):
     """rows: [{student_id, name, roll_number, assign_sum, assign_n, exam_sum, exam_n}]
     Returns the same rows plus assign_pct, exam_pct, final_pct, result ('Pass'/'Fail').
 
-    Pattern used by all three wrappers: build stdin lines, run the engine,
+    Pattern used by both wrappers: build stdin lines, run the engine,
     then merge results back onto the original dicts by student_id so the
     caller keeps its row order and gets the computed keys added in place.
     """
@@ -115,24 +114,3 @@ def compute_attendance(session_count, rows):
         row["pct"] = round(float(pct), 2)
         row["eligible"] = eligible == "ELIGIBLE"
     return rows
-
-
-# ---------- rank ----------
-
-def compute_rank(rows):
-    """rows like compute_grades' input (section-wide overall marks).
-    Returns rows sorted by rank with a 'rank' key added."""
-    stdin_lines = [
-        "\t".join(str(x) for x in (
-            r["student_id"], _clean(r["name"]), _clean(r["roll_number"]),
-            r["assign_sum"], r["assign_n"], r["exam_sum"], r["exam_n"],
-        ))
-        for r in rows
-    ]
-    by_id = {r["student_id"]: r for r in rows}
-    for line in _run("rank", stdin_lines):
-        rank, sid, final_pct = line.split("\t")
-        row = by_id[int(sid)]
-        row["rank"] = int(rank)
-        row["final_pct"] = round(float(final_pct), 2)
-    return sorted(by_id.values(), key=lambda r: r["rank"])

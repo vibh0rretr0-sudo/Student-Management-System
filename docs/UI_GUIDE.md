@@ -162,11 +162,14 @@ decision.
 
 ---
 
-## 8. Rank chips — fixed metal colors
+## 8. The theme toggle — a form button, saved server-side
 
-The podium chips use literal gold/silver/bronze colors, **not** theme tokens,
-so "1st place" reads identically in light and dark mode; every other rank
-uses `--surface-2` and inherits the theme. One pill shape, four color rules.
+Dark mode is a real `<form method="post">` whose submit button *looks*
+like a switch (`.toggle-ui`'s sliding pill is pure CSS). Clicking it POSTs
+`/prefs/theme`; the server flips a one-year `theme` cookie and the next
+render puts `class="dark"` on `<html>` — so the choice survives every tab
+switch and even a server restart. The dark palette keys off `html.dark`
+rather than the old checkbox `:has()` state: same tokens, now server-owned.
 
 ---
 

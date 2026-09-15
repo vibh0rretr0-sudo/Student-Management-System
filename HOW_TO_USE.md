@@ -7,7 +7,7 @@ setup asks you is explained *before* it appears.
 
 > The finished result: a login page at `http://127.0.0.1:8000` where two
 > demo professors manage students, courses, marks, grades, attendance and
-> rankings — entirely on your machine. Nothing is sent to any server.
+> announcements — entirely on your machine. Nothing is sent to any server.
 
 ---
 
@@ -67,7 +67,7 @@ pip install -r requirements.txt
 
 ## 3. Build the C++ engine
 
-The grading / attendance / ranking math lives in a small C++ program
+The grading / attendance math lives in a small C++ program
 that Python starts and talks to. Compile it once:
 
 ```bash
@@ -160,17 +160,23 @@ A 2-minute tour:
 1. Log in as **vibhor** → the **Dashboard** shows six stat cards and two
    bar charts (grade distribution, attendance per course).
 2. **Courses → any course** → the action row opens Assignments, Exams,
-   Attendance, Grades, and Course rank. Enter some marks in a marks grid,
+   Attendance, and Grades. Enter some marks in a marks grid,
    save, then open **Grades** — the C++ engine computes the final %
    (50 % coursework + 50 % exams, pass at 40 %).
 3. **Attendance** → pick present/absent for a date, save → the summary
    table shows the 75 % eligibility verdict per student.
-4. **Rankings** (sidebar) → every section ranked, ties sharing a rank.
-5. Now the permission trick: log out, log in as **sharma**, and browse
-   around — she can *view* all students and even open vibhor's grades and
-   rankings, but the moment she opens a marks sheet or tries to edit
-   something that isn't hers, she gets a proper **403 page**. That check
-   is enforced server-side, not just hidden in the buttons.
+4. **Announcements** (sidebar) → publish a notice (institute-wide or to
+   one of your sections), attach a PDF or image, then download it back —
+   the bytes round-trip exactly. Only the author sees a Delete button.
+5. **Theme toggle** (top bar) → click it, visit three different tabs —
+   the dark mode follows you. It's saved in a cookie by the server, so
+   it survives restarts too.
+6. Now the permission trick: log out, log in as **sharma**, and browse
+   around — she can *view* all students, open vibhor's grades, and read
+   institute-wide announcements, but the moment she opens a marks sheet,
+   tries to edit something that isn't hers, or deletes another
+   professor's announcement, she gets a proper **403/404 page**. That
+   check is enforced server-side, not just hidden in the buttons.
 
 ---
 

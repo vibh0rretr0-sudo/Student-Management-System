@@ -16,10 +16,12 @@ The exception-to-HTTP contract (the viva table):
 Handlers just `raise` — the mapping lives in ONE place (dispatch), so
 every route errors identically.
 """
+import email.policy
 import functools
 import re
 import traceback
 import urllib.parse
+from email.parser import BytesParser
 from http import cookies as http_cookies
 
 from backend import auth
@@ -64,20 +66,66 @@ def login_required(fn):
     return wrapper
 
 
+def _parse_multipart(raw, content_type):
+    """Split a multipart/form-data body into (text fields, file uploads).
+
+    WHY the email parser (viva answer): multipart IS a MIME format, and
+    Python's stdlib email package is a complete MIME parser — a hand-
+    rolled boundary splitter re-learns edge cases (quoted boundaries,
+    RFC 2231 filenames, CRLF handling) the stdlib already solved.
+    File fields become {'filename', 'content_type', 'data'(bytes)} dicts;
+    everything else lands in the plain str form dict like any POST.
+    """
+    # parsebytes wants full MIME: prepend the form's Content-Type as the
+    # part boundary carrier, then the raw body IS the multipart payload.
+    header = (
+        b"Content-Type: " + content_type.encode("latin-1") +
+        b"\r\nMIME-Version: 1.0\r\n\r\n"
+    )
+    message = BytesParser(policy=email.policy.default).parsebytes(header + raw)
+    form, files = {}, {}
+    for part in message.iter_parts():
+        name = part.get_param("name", header="content-disposition")
+        if name is None:
+            continue
+        filename = part.get_filename() or ""
+        if filename:
+            files[name] = {
+                "filename": filename,
+                "content_type": part.get_content_type(),
+                "data": part.get_payload(decode=True) or b"",
+            }
+        else:
+            form[name] = part.get_content()
+    return form, files
+
+
 class Request:
     """Parsed view of one HTTP request."""
 
     def __init__(self, method, path, query_string, body, headers):
-        """Parse query/form/cookies up front; handlers get plain dicts."""
+        """Parse query/form/cookies up front; handlers get plain dicts.
+
+        `body` is the RAW request bytes: decoded + url-decoded for normal
+        forms, MIME-split for multipart (file uploads). Handlers read
+        self.form / self.files and never see the encoding.
+        """
         self.method = method
         self.path = path
+        self.headers = headers  # raw header access (Referer, Content-Type, ...)
         self.params = {}  # named groups from the route regex
         # parse_qs returns lists (HTTP allows repeated keys); HTML forms in
         # this app never repeat a key, so keeping v[0] gives handlers plain
         # dicts. keep_blank_values preserves empty inputs for validation to
         # reject with a friendly message instead of a KeyError.
         self.query = {k: v[0] for k, v in urllib.parse.parse_qs(query_string, keep_blank_values=True).items()}
-        self.form = {k: v[0] for k, v in urllib.parse.parse_qs(body, keep_blank_values=True).items()} if body else {}
+        content_type = headers.get("Content-Type", "")
+        if content_type.startswith("multipart/form-data"):
+            self.form, self.files = _parse_multipart(body or b"", content_type)
+        else:
+            text = body.decode("utf-8", errors="replace") if body else ""
+            self.form = {k: v[0] for k, v in urllib.parse.parse_qs(text, keep_blank_values=True).items()}
+            self.files = {}
         self.cookies = {}
         raw_cookie = headers.get("Cookie", "")
         if raw_cookie:

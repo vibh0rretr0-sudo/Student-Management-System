@@ -48,8 +48,9 @@
   color-scheme: light;
 }
 
-/* ---------- dark theme (pure-CSS toggle: checkbox + :has) ---------- */
-body:has(#theme-toggle:checked) {
+/* ---------- dark theme (server-rendered: class on <html> from the
+   theme cookie — the choice persists across pages and restarts) ---------- */
+html.dark {
   --accent:        #ef4467;
   --accent-hover:  #ff6b8a;
   --accent-soft:   #3a2029;
@@ -297,12 +298,19 @@ small { color: var(--text-soft); }
    time. The math is fixed by construction — glyphs are 16px wide with a
    5px gap and 9px side padding, so the thumb is 16px at left:9px and
    shifts exactly 16+5 = 21px to land on the second glyph. */
-.theme-toggle { position: relative; display: inline-flex; }
-.theme-toggle input {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
+/* The toggle is now a real <form><button> that POSTs /prefs/theme —
+   the server flips the theme cookie, so the choice survives tab switches
+   (no JavaScript: a submit button is the only clickable element a
+   form-less page can wire to a server round-trip). */
+.theme-form { display: inline-flex; margin: 0; }
+.theme-toggle {
+  position: relative;
+  display: inline-flex;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
 }
 .toggle-ui {
   display: inline-flex;
@@ -341,12 +349,12 @@ small { color: var(--text-soft); }
   background: var(--accent-soft);
   transition: transform .25s ease, background .25s ease;
 }
-body:has(#theme-toggle:checked) .toggle-ui::before {
+html.dark .toggle-ui::before {
   transform: translateX(21px);  /* 16px glyph + 5px gap */
   background: var(--accent);
 }
-body:has(#theme-toggle:checked) .toggle-ui .glyph-sun { opacity: .35; }
-body:has(#theme-toggle:checked) .toggle-ui .glyph-moon { opacity: 1; }
+html.dark .toggle-ui .glyph-sun { opacity: .35; }
+html.dark .toggle-ui .glyph-moon { opacity: 1; }
 
 /* ---------- tables ---------- */
 .data-table { width: 100%; border-collapse: collapse; }
@@ -378,26 +386,23 @@ body:has(#theme-toggle:checked) .toggle-ui .glyph-moon { opacity: 1; }
   vertical-align: top;
 }
 td.actions { text-align: right; white-space: nowrap; }
-td.rank-cell { white-space: nowrap; }
-/* Rank badge: one shape for every row; podium colors for the top three.
-   Fixed metal colors (not theme tokens) so gold/silver/bronze read
-   identically in light and dark. */
-.rank-chip {
+/* ---------- announcements ---------- */
+.ann-meta { color: var(--text-soft); font-size: .82rem; margin: .15rem 0 .6rem; }
+/* Attachment chip: filename as a pill-link; hover signals download. */
+.attachment {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  min-width: 2rem;
-  height: 1.55rem;
-  padding: 0 .5rem;
+  gap: .35rem;
+  padding: .3rem .7rem;
+  border: 1px solid var(--line);
   border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
   font-size: .8rem;
-  font-weight: 800;
-  border: 1px solid transparent;
+  font-weight: 650;
+  text-decoration: none;
 }
-.rank-chip.rank-1 { background: #f0b429; color: #4a3403; }
-.rank-chip.rank-2 { background: #c3ccd9; color: #333c4e; }
-.rank-chip.rank-3 { background: #cd8b4e; color: #47210a; }
-.rank-chip.rank-n { background: var(--surface-2); color: var(--text-soft); border-color: var(--line); }
+.attachment:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ---------- forms ---------- */
 .field { display: flex; flex-direction: column; gap: .3rem; margin-bottom: .95rem; }

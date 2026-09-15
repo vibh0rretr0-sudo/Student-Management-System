@@ -1,10 +1,10 @@
-"""Grades and rankings pages powered by the C++ engine.
+"""Grades pages powered by the C++ engine.
 
-The access story (worth telling accurately in a viva): grades and rank
-pages are VIEWABLE by any logged-in professor, but only the course
-OWNER's visit persists computed grades into the grades table (the
-upsert below is owner-gated) — a viewer can't write another professor's
-gradebook by looking at it.
+The access story (worth telling accurately in a viva): grade pages are
+VIEWABLE by any logged-in professor, but only the course OWNER's visit
+persists computed grades into the grades table (the upsert below is
+owner-gated) — a viewer can't write another professor's gradebook by
+looking at it.
 
 Error style: an EngineError (missing/failed binary) renders the page
 with an engine_note instead of a 500 — the UI survives a missing build.
@@ -48,70 +48,6 @@ def course_grades(request):
     )
 
 
-@route("GET", r"/courses/(?P<course_id>\d+)/rank")
-@login_required
-def course_rank(request):
-    """Per-course ranking (C++ engine) — viewable by any professor, like grades."""
-    course_id = int(request.params["course_id"])
-    course = courses.get(course_id)
-    if course is None:
-        raise NotFound("That course does not exist.")
-
-    try:
-        ranked = cpp_engine.compute_rank(assessments.course_grade_inputs(course_id))
-        engine_note = ""
-    except cpp_engine.EngineError as exc:
-        ranked = []
-        engine_note = str(exc)
-
-    for r in ranked:
-        r["section_name"] = course["section_name"]
-
-    body = template.render(
-        "rank.html",
-        course_title=_course_title(course),
-        rows=_rank_rows_html(ranked),
-        engine_note=template.esc(engine_note),
-        back_link=f"/courses/{course_id}",
-    )
-    return Response.html(
-        template.page(request, f"Course rank — {course['course_code']}", body, active="courses")
-    )
-
-
-@route("GET", "/rankings")
-@login_required
-def rankings(request):
-    """Section-wide ranking across ALL courses (C++ engine ranks within a section)."""
-    rows = []
-    engine_note = ""
-    # One engine call PER SECTION: ranking is within-section by design,
-    # and compute_rank returns rows sorted by rank, so extending in
-    # section order keeps the output grouped and ordered.
-    for sec in courses.list_sections():
-        section_rows = assessments.section_overall_inputs(sec["id"])
-        if not section_rows:
-            continue
-        try:
-            ranked = cpp_engine.compute_rank(section_rows)
-        except cpp_engine.EngineError as exc:
-            engine_note = str(exc)
-            break
-        for r in ranked:
-            r["section_name"] = sec["section_name"]
-        rows.extend(ranked)
-
-    if not rows and not engine_note:
-        engine_note = "No students exist yet."
-
-    body = template.render(
-        "rankings.html",
-        rows=_rank_rows_html(rows),
-        engine_note=template.esc(engine_note),
-    )
-    return Response.html(template.page(request, "Rankings", body, active="rankings"))
-
-
 # ---------- helpers ----------
 
 def _visible_course(request, course_id):
@@ -142,30 +78,6 @@ def _grade_rows_html(rows):
             f"<td>{r['exam_pct']}%</td>"
             f"<td><strong>{r['final_pct']}%</strong></td>"
             f"<td><span class=\"{badge}\">{r['result']}</span></td>"
-            "</tr>"
-        )
-    return "".join(parts)
-
-
-def _rank_rows_html(rows):
-    """Rank table rows; podium ranks get gold/silver/bronze chips."""
-    if not rows:
-        return '<tr><td colspan="5" class="empty">No ranking data.</td></tr>'
-    parts = []
-    for i, r in enumerate(rows):
-        # Competition ranking comes from C++: equal percentages share a
-        # rank and the next rank SKIPS (1,2,2,4). One uniform badge shape
-        # for every row — podium colors for the top three, quiet neutral
-        # for the rest. (Emoji medals rendered at platform-dependent
-        # sizes and sat misaligned next to plain digits.)
-        chip = {1: "rank-1", 2: "rank-2", 3: "rank-3"}.get(r["rank"], "rank-n")
-        parts.append(
-            f"<tr style=\"--i:{i}\">"
-            f"<td class=\"rank-cell\"><span class=\"rank-chip {chip}\">{r['rank']}</span></td>"
-            f"<td>{template.esc(r['roll_number'])}</td>"
-            f"<td><a href=\"/students/{r['student_id']}\">{template.esc(r['name'])}</a></td>"
-            f"<td>{template.esc(r['section_name'])}</td>"
-            f"<td><strong>{r['final_pct']}%</strong></td>"
             "</tr>"
         )
     return "".join(parts)

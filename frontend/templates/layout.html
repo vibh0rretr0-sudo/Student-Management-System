@@ -4,7 +4,7 @@
      the content placeholder — one shell, 15 inner pages. NOTE: never
      write placeholder syntax like double-brace tokens inside comments
      here; the engine substitutes every occurrence in the file. -->
-<html lang="en">
+<html lang="en" class="{{body_class}}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -23,10 +23,11 @@
       <header class="topbar">
         <h1 class="topbar-title">{{page_title}}</h1>
         <div class="topbar-right">
-          <label class="theme-toggle" title="Toggle dark mode">
-            <input type="checkbox" id="theme-toggle">
-            <span class="toggle-ui"><span class="glyph glyph-sun">☀</span><span class="glyph glyph-moon">☾</span></span>
-          </label>
+          <form class="theme-form" method="post" action="/prefs/theme">
+            <button type="submit" class="theme-toggle" title="Toggle dark mode (saved for every page)">
+              <span class="toggle-ui"><span class="glyph glyph-sun">☀</span><span class="glyph glyph-moon">☾</span></span>
+            </button>
+          </form>
           <span class="topbar-user">{{username}}</span>
         </div>
       </header>
