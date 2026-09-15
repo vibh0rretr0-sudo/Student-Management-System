@@ -29,18 +29,37 @@ def sections_taught_by(professor_id):
     )
 
 
-def list_for_professor(professor_id):
-    """The professor's courses with enrollment counts, soonest slot first."""
-    return db.fetch_all(
-        """SELECT c.id, c.course_name, c.course_code, c.term, c.day_of_week,
+def list_for_professor(professor_id, venue=None):
+    """The professor's courses with enrollment counts, soonest slot first.
+
+    venue (optional) narrows the list to one room — the courses-page
+    filter. Filtering happens in SQL, so a filtered list is still
+    scoped server-side, never just hidden in the browser.
+    """
+    sql = """SELECT c.id, c.course_name, c.course_code, c.venue, c.term, c.day_of_week,
                   c.start_time, c.end_time, sec.section_name,
                   COUNT(e.id) AS student_count
            FROM courses c
            JOIN sections sec ON sec.id = c.section_id
            LEFT JOIN enrollments e ON e.course_id = c.id
-           WHERE c.professor_id = %s
+           WHERE c.professor_id = %s"""
+    params = [professor_id]
+    if venue:  # ?venue=NYB-314 on /courses
+        sql += "\n           AND c.venue = %s"
+        params.append(venue)
+    sql += """
            GROUP BY c.id
-           ORDER BY sec.section_name, c.course_code""",
+           ORDER BY sec.section_name, c.course_code"""
+    return db.fetch_all(sql, tuple(params))
+
+
+def list_venues_for_professor(professor_id):
+    """Distinct venues of the professor's own courses (filter dropdown)."""
+    return db.fetch_all(
+        """SELECT DISTINCT c.venue
+           FROM courses c
+           WHERE c.professor_id = %s
+           ORDER BY c.venue""",
         (professor_id,),
     )
     # Two SQL details worth remembering:
@@ -61,27 +80,27 @@ def get(course_id):
     )
 
 
-def create(course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time):
+def create(course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time, venue="TBA"):
     """Create a course; raises ValueError on a professor double-booking in the batch."""
     _ensure_professor_free(professor_id, section_id, day_of_week, start_time, end_time)
     return db.execute(
         """INSERT INTO courses
-           (course_name, course_code, professor_id, section_id, term,
+           (course_name, course_code, venue, professor_id, section_id, term,
             day_of_week, start_time, end_time)
-           VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
-        (course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time),
+           VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+        (course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time),
     )
 
 
-def update(course_id, course_name, course_code, section_id, term, day_of_week, start_time, end_time, professor_id):
+def update(course_id, course_name, course_code, section_id, term, day_of_week, start_time, end_time, professor_id, venue="TBA"):
     """Update a course; raises ValueError on a professor double-booking in the batch."""
     _ensure_professor_free(professor_id, section_id, day_of_week, start_time, end_time, exclude_course_id=course_id)
     db.execute(
         """UPDATE courses
-           SET course_name = %s, course_code = %s, section_id = %s, term = %s,
+           SET course_name = %s, course_code = %s, venue = %s, section_id = %s, term = %s,
                day_of_week = %s, start_time = %s, end_time = %s
            WHERE id = %s""",
-        (course_name, course_code, section_id, term, day_of_week, start_time, end_time, course_id),
+        (course_name, course_code, venue, section_id, term, day_of_week, start_time, end_time, course_id),
     )
 
 

@@ -96,51 +96,20 @@ INSERT INTO students (id, name, roll_number, date_of_birth, contact, enrollment_
 -- 26-31 Sat.
 
 -- ===== Monday =====
-INSERT INTO courses (id, course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
-    ( 1, 'Communication Skills (Lecture)',      'CS-L',           1, 1, '2026-27 S1', 1, '08:50', '09:40'),
-    ( 2, 'Communication Skills (Lecture)',      'CS-L',           1, 2, '2026-27 S1', 1, '08:50', '09:40'),
-    ( 3, 'Applied Physics (Lecture)',           'PS-L',           4, 1, '2026-27 S1', 1, '09:40', '10:30'),
-    ( 4, 'Applied Physics (Lecture)',           'PS-L',           4, 2, '2026-27 S1', 1, '09:40', '10:30'),
-    ( 5, 'Engineering Mathematics-1 (Lecture)', 'EM1-L',          1, 1, '2026-27 S1', 1, '10:30', '11:20'),
-    ( 6, 'Engineering Mathematics-1 (Lecture)', 'EM1-L',          1, 2, '2026-27 S1', 1, '10:30', '11:20'),
-    ( 7, 'Computer Programming Lab (SN1)',      'CPLT-LAB-SN1',   6, 1, '2026-27 S1', 1, '11:20', '12:50'),
-    ( 8, 'Computer Programming Lab (SN2)',      'CPLT-LAB-SN2',   1, 2, '2026-27 S1', 1, '11:20', '12:50');
-
+INSERT INTO courses (id, course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
+    ( 1, 'Communication Skills (Lecture)',      'CS-L',      'NYB-314',           1, 1, '2026-27 S1', 1, '08:50', '09:40'),    ( 2, 'Communication Skills (Lecture)',      'CS-L',      'NYB-314',           1, 2, '2026-27 S1', 1, '08:50', '09:40'),    ( 3, 'Applied Physics (Lecture)',           'PS-L',           'NYB-314',           4, 1, '2026-27 S1', 1, '09:40', '10:30'),    ( 4, 'Applied Physics (Lecture)',           'PS-L',           'NYB-314',           4, 2, '2026-27 S1', 1, '09:40', '10:30'),    ( 5, 'Engineering Mathematics-1 (Lecture)', 'EM1-L', 'NYB-405',          1, 1, '2026-27 S1', 1, '10:30', '11:20'),    ( 6, 'Engineering Mathematics-1 (Lecture)', 'EM1-L', 'NYB-405',          1, 2, '2026-27 S1', 1, '10:30', '11:20'),    ( 7, 'Computer Programming Lab (SN1)',      'CPLT-LAB-SN1',      'KAB-407',   6, 1, '2026-27 S1', 1, '11:20', '12:50'),    ( 8, 'Computer Programming Lab (SN2)',      'CPLT-LAB-SN2',      'NYB-314',   1, 2, '2026-27 S1', 1, '11:20', '12:50');
 -- ===== Tuesday =====
-INSERT INTO courses (id, course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
-    ( 9, 'Digital Literacy Lab (DDAL)',           'DDAL-LAB',   3, 1, '2026-27 S1', 2, '08:50', '10:30'),
-    (10, 'Digital Literacy Lab (DDAL)',           'DDAL-LAB',   3, 2, '2026-27 S1', 2, '08:50', '10:30'),
-    (11, 'Engineering Mathematics-1 (Lecture 2)', 'EM1-L2',     3, 1, '2026-27 S1', 2, '09:40', '10:30'),
-    (12, 'Engineering Mathematics-1 (Lecture 2)', 'EM1-L2',     3, 2, '2026-27 S1', 2, '09:40', '10:30'),
-    (13, 'Applied Physics (Lecture 2)',           'PS-L2',      4, 1, '2026-27 S1', 2, '11:20', '12:05'),
-    (14, 'Applied Physics (Lecture 2)',           'PS-L2',      4, 2, '2026-27 S1', 2, '11:20', '12:05');
-
+INSERT INTO courses (id, course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
+    ( 9, 'Digital Literacy Lab (DDAL)',           'DDAL-LAB',           'NYB-501',   3, 1, '2026-27 S1', 2, '08:50', '10:30'),    (10, 'Digital Literacy Lab (DDAL)',           'DDAL-LAB',           'NYB-501',   3, 2, '2026-27 S1', 2, '08:50', '10:30'),    (11, 'Engineering Mathematics-1 (Lecture 2)', 'EM1-L2', 'NYB-314',     3, 1, '2026-27 S1', 2, '09:40', '10:30'),    (12, 'Engineering Mathematics-1 (Lecture 2)', 'EM1-L2', 'NYB-314',     3, 2, '2026-27 S1', 2, '09:40', '10:30'),    (13, 'Applied Physics (Lecture 2)',           'PS-L2',           'NYB-283',      4, 1, '2026-27 S1', 2, '11:20', '12:05'),    (14, 'Applied Physics (Lecture 2)',           'PS-L2',           'NYB-283',      4, 2, '2026-27 S1', 2, '11:20', '12:05');
 -- ===== Wednesday =====
-INSERT INTO courses (id, course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
-    (15, 'Computer Programming and Logical Thinking (Lecture)', 'CPLT-L',      2, 1, '2026-27 S1', 3, '08:50', '10:30'),
-    (16, 'Computer Programming and Logical Thinking (Lecture)', 'CPLT-L',      2, 2, '2026-27 S1', 3, '08:50', '10:30'),
-    (17, 'Engineering Mathematics-1 Tutorial (SN1)',            'EM1-TUT-SN1', 7, 1, '2026-27 S1', 3, '09:40', '10:30'),
-    (18, 'Digital Literacy Lab (DDAL) 2',                       'DDAL-LAB2',   3, 1, '2026-27 S1', 3, '11:20', '12:50'),
-    (19, 'Digital Literacy Lab (DDAL) 2',                       'DDAL-LAB2',   3, 2, '2026-27 S1', 3, '11:20', '12:50');
-
+INSERT INTO courses (id, course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
+    (15, 'Computer Programming and Logical Thinking (Lecture)', 'CPLT-L', 'VIB-218',      2, 1, '2026-27 S1', 3, '08:50', '10:30'),    (16, 'Computer Programming and Logical Thinking (Lecture)', 'CPLT-L', 'VIB-218',      2, 2, '2026-27 S1', 3, '08:50', '10:30'),    (17, 'Engineering Mathematics-1 Tutorial (SN1)',            'EM1-TUT-SN1',            'VIB-218', 7, 1, '2026-27 S1', 3, '09:40', '10:30'),    (18, 'Digital Literacy Lab (DDAL) 2',                       'DDAL-LAB2',                       'NYB-505',   3, 1, '2026-27 S1', 3, '11:20', '12:50'),    (19, 'Digital Literacy Lab (DDAL) 2',                       'DDAL-LAB2',                       'NYB-505',   3, 2, '2026-27 S1', 3, '11:20', '12:50');
 -- ===== Thursday =====
-INSERT INTO courses (id, course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
-    (20, 'Computer Programming and Logical Thinking (Lecture 2)', 'CPLT-L2',       2, 1, '2026-27 S1', 4, '08:50', '10:30'),
-    (21, 'Computer Programming and Logical Thinking (Lecture 2)', 'CPLT-L2',       2, 2, '2026-27 S1', 4, '08:50', '10:30'),
-    (22, 'Engineering Mathematics-1 Tutorial (SN2)',              'EM1-TUT-SN2',   7, 2, '2026-27 S1', 4, '08:50', '09:40'),
-    (23, 'Computer Programming Lab (Batch)',                      'CPLT-LAB-B',    6, 1, '2026-27 S1', 4, '09:40', '10:30'),
-    (24, 'Computer Programming Lab (Batch)',                      'CPLT-LAB-B',    6, 2, '2026-27 S1', 4, '09:40', '10:30'),
-    (25, 'Applied Physics Lab-2 (SN2)',                           'PS-LAB-SN2',    3, 2, '2026-27 S1', 4, '09:40', '12:05');
-
+INSERT INTO courses (id, course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
+    (20, 'Computer Programming and Logical Thinking (Lecture 2)', 'CPLT-L2', 'NYB-506',       2, 1, '2026-27 S1', 4, '08:50', '10:30'),    (21, 'Computer Programming and Logical Thinking (Lecture 2)', 'CPLT-L2', 'NYB-506',       2, 2, '2026-27 S1', 4, '08:50', '10:30'),    (22, 'Engineering Mathematics-1 Tutorial (SN2)',              'EM1-TUT-SN2',              'NYB-402',   7, 2, '2026-27 S1', 4, '08:50', '09:40'),    (23, 'Computer Programming Lab (Batch)',                      'CPLT-LAB-B',                      'KAB-407',    6, 1, '2026-27 S1', 4, '09:40', '10:30'),    (24, 'Computer Programming Lab (Batch)',                      'CPLT-LAB-B',                      'KAB-407',    6, 2, '2026-27 S1', 4, '09:40', '10:30'),    (25, 'Applied Physics Lab-2 (SN2)',                           'PS-LAB-SN2',                           'VIB-113',    3, 2, '2026-27 S1', 4, '09:40', '12:05');
 -- ===== Saturday =====
-INSERT INTO courses (id, course_name, course_code, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
-    (26, 'Applied Physics Lab (SN1)',                             'PS-LAB-SN1',     5, 1, '2026-27 S1', 6, '08:50', '10:30'),
-    (27, 'Computer Programming Lab (SN2 Saturday)',               'CPLT-LAB-SN2-S', 2, 2, '2026-27 S1', 6, '09:40', '10:30'),
-    (28, 'Computer Programming and Logical Thinking (Lecture 3)', 'CPLT-L3',        2, 1, '2026-27 S1', 6, '10:30', '11:20'),
-    (29, 'Computer Programming and Logical Thinking (Lecture 3)', 'CPLT-L3',        2, 2, '2026-27 S1', 6, '10:30', '11:20'),
-    (30, 'Engineering Mathematics-1 (Lecture 3)',                 'EM1-L3',         1, 1, '2026-27 S1', 6, '10:30', '11:20'),
-    (31, 'Engineering Mathematics-1 (Lecture 3)',                 'EM1-L3',         1, 2, '2026-27 S1', 6, '10:30', '11:20');
-
+INSERT INTO courses (id, course_name, course_code, venue, professor_id, section_id, term, day_of_week, start_time, end_time) VALUES
+    (26, 'Applied Physics Lab (SN1)',                             'PS-LAB-SN1',                             'VIB-113',     5, 1, '2026-27 S1', 6, '08:50', '10:30'),    (27, 'Computer Programming Lab (SN2 Saturday)',               'CPLT-LAB-SN2-S',               'KAB-407', 2, 2, '2026-27 S1', 6, '09:40', '10:30'),    (28, 'Computer Programming and Logical Thinking (Lecture 3)', 'CPLT-L3', 'NYB-207',        2, 1, '2026-27 S1', 6, '10:30', '11:20'),    (29, 'Computer Programming and Logical Thinking (Lecture 3)', 'CPLT-L3', 'NYB-207',        2, 2, '2026-27 S1', 6, '10:30', '11:20'),    (30, 'Engineering Mathematics-1 (Lecture 3)',                 'EM1-L3',                 'NYB-207',         1, 1, '2026-27 S1', 6, '10:30', '11:20'),    (31, 'Engineering Mathematics-1 (Lecture 3)',                 'EM1-L3',                 'NYB-207',         1, 2, '2026-27 S1', 6, '10:30', '11:20');
 -- ---------- Enrollments ----------
 -- Every student enrolls in all courses of their own sub-batch - one
 -- INSERT..SELECT instead of hundreds of literal rows.

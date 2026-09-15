@@ -1,14 +1,21 @@
 <!-- Purpose: the professor's own courses with live enrollment counts
-     (LEFT JOIN + COUNT in courses.list_for_professor). -->
+     (LEFT JOIN + COUNT in courses.list_for_professor). The venue filter
+     is a GET form — bookmarkable URLs, zero JavaScript. -->
 <div class="page-head">
   <h2>My courses</h2>
-  <a class="btn" href="/courses/new">+ Add course</a>
+  <form method="get" action="/courses" class="filter-bar">
+    <select name="venue">{{venue_options}}</select>
+    <button type="submit" class="btn">Filter</button>
+  </form>
+  <div class="head-actions">
+    <a class="btn" href="/courses/new">+ Add course</a>
+  </div>
 </div>
 
 <section class="card" style="--i:1">
   <table class="data-table">
     <thead>
-      <tr><th>Code</th><th>Course</th><th>Section</th><th>Term</th><th>Slot</th><th>Students</th></tr>
+      <tr><th>Code</th><th>Course</th><th>Venue</th><th>Section</th><th>Term</th><th>Slot</th><th>Students</th></tr>
     </thead>
     <tbody>{{rows}}</tbody>
   </table>

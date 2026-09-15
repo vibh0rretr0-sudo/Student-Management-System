@@ -15,9 +15,20 @@ from backend.routes.validation import parse_date, parse_int, parse_time, require
 @route("GET", "/courses")
 @login_required
 def course_list(request):
-    """GET /courses — the professor's own courses only (scoped in the model)."""
-    rows = courses.list_for_professor(request.user["id"])
-    body = template.render("courses.html", rows=_course_rows_html(rows))
+    """GET /courses — the professor's own courses only (scoped in the model).
+
+    ?venue=NYB-314 optionally narrows the list to one room. The filter is
+    a GET form (same pattern as the students page), so every filtered
+    view is a plain bookmarkable URL with no JavaScript.
+    """
+    venue = request.query.get("venue", "")
+    rows = courses.list_for_professor(request.user["id"], venue=venue or None)
+    body = template.render(
+        "courses.html",
+        rows=_course_rows_html(rows, filtered=bool(venue)),
+        venue_options=_venue_options(request.user["id"], venue),
+        venue_value=template.esc(venue),
+    )
     return Response.html(template.page(request, "My Courses", body, active="courses"))
 
 
@@ -74,6 +85,7 @@ def course_edit_form(request):
     values = {
         "name": template.esc(course["course_name"]),
         "code": template.esc(course["course_code"]),
+        "venue": template.esc(course["venue"]),
         "section_options": _section_options(str(course["section_id"])),
         "term": template.esc(course["term"]),
         "day_options": _day_options(course["day_of_week"]),
@@ -152,6 +164,7 @@ def _validated_course(request):
     return {
         "course_name": request.form["course_name"].strip(),
         "course_code": request.form["course_code"].strip().upper(),
+        "venue": request.form.get("venue", "").strip() or "TBA",
         "section_id": parse_int(request.form["section_id"], "section", minimum=1),
         "term": request.form["term"].strip(),
         "day_of_week": parse_int(request.form["day_of_week"], "day of week", minimum=1, maximum=7),
@@ -172,6 +185,7 @@ def _blank_course_values():
     return {
         "name": "",
         "code": "",
+        "venue": "",
         "section_options": _section_options(""),
         "term": "Sem 1",
         "day_options": _day_options(None),
@@ -188,6 +202,7 @@ def _course_form(request, form_title, action, values, cancel_link):
         action=action,
         name_value=values["name"],
         code_value=values["code"],
+        venue_value=values["venue"],
         section_options=values["section_options"],
         term_value=values["term"],
         day_options=values["day_options"],
@@ -233,11 +248,13 @@ def _fmt_time(value):
     return f"{hours:02d}:{minutes:02d}"
 
 
-def _course_rows_html(rows):
+def _course_rows_html(rows, filtered=False):
     """Table rows for 'My Courses' — the model already scoped to the
     professor, so this builder renders exactly what it's given."""
     if not rows:
-        return '<tr><td colspan="6" class="empty">No courses yet — add your first one.</td></tr>'
+        msg = ("No courses in this venue — clear the filter to see all."
+               if filtered else "No courses yet — add your first one.")
+        return f'<tr><td colspan="7" class="empty">{msg}</td></tr>'
     out = []
     for i, c in enumerate(rows):
         slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
@@ -245,6 +262,7 @@ def _course_rows_html(rows):
             f"<tr style=\"--i:{i}\">"
             f"<td><a href=\"/courses/{c['id']}\">{template.esc(c['course_code'])}</a></td>"
             f"<td><a href=\"/courses/{c['id']}\">{template.esc(c['course_name'])}</a></td>"
+            f"<td>{template.esc(c['venue'])}</td>"
             f"<td>{template.esc(c['section_name'])}</td>"
             f"<td>{template.esc(c['term'])}</td>"
             f"<td>{template.esc(slot)}</td>"
@@ -254,11 +272,24 @@ def _course_rows_html(rows):
     return "".join(out)
 
 
+def _venue_options(professor_id, selected=""):
+    """Venue <option> list from the professor's OWN courses (no data leak:
+    a professor can only ever filter by rooms they actually teach in).
+    An empty value means 'All venues' — the unfiltered list."""
+    venues = [v["venue"] for v in courses.list_venues_for_professor(professor_id)]
+    options = ['<option value="">All venues</option>']
+    for v in venues:
+        sel = " selected" if selected == v else ""
+        options.append(f'<option value="{template.esc(v)}"{sel}>{template.esc(v)}</option>')
+    return "".join(options)
+
+
 def _course_info_rows(c):
     """Detail-page key/value rows (code, section, term, schedule, professor)."""
     slot = f"{courses.WEEKDAYS[c['day_of_week']]} {_fmt_time(c['start_time'])}–{_fmt_time(c['end_time'])}"
     rows = [
         ("Code", c["course_code"]),
+        ("Venue", c["venue"]),
         ("Section", c["section_name"]),
         ("Term", c["term"]),
         ("Schedule", slot),

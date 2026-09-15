@@ -14,6 +14,10 @@
 --  * `grades` intentionally stores C++-computed results (percentage,
 --    Pass/Fail) — a materialized summary, not raw data; raw data stays
 --    in marks/attendance.
+--  * courses.venue is presentation data (the printed timetable's room
+--    code), so it defaults to 'TBA' — four room codes don't justify a
+--    lookup table, and a venue is an attribute of the meeting, not an
+--    entity of its own.
 --  * Marks-vs-max validation (marks_obtained <= max_marks) is enforced
 --    in the application layer; a CHECK cannot reference another table.
 --  * Announcements store attachment bytes in the row (MEDIUMBLOB, 5 MB
@@ -72,6 +76,7 @@ CREATE TABLE courses (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     course_name  VARCHAR(100) NOT NULL,
     course_code  VARCHAR(20)  NOT NULL,
+    venue        VARCHAR(50)  NOT NULL DEFAULT 'TBA', -- room code from the timetable, e.g. NYB-314 (TBA when unset)
     professor_id INT UNSIGNED NOT NULL,
     section_id   INT UNSIGNED NOT NULL,
     term         VARCHAR(20)  NOT NULL DEFAULT 'Sem 1',  -- term is set per course (confirmed)
