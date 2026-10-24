@@ -4,7 +4,7 @@ import {
   callout, el, errorPanel, fmtDate, formField, iconEl, loadingView, pager,
   setFieldError, statusBadge, toast,
 } from "../../core/ui.js";
-import { getThreshold } from "../../app/session.js";
+import { getThreshold } from "../../runtime/session.js";
 import { dataTable } from "../../components/table.js";
 import { pageHeader, panel } from "../../components/page.js";
 

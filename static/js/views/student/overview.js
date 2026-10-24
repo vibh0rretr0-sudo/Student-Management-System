@@ -4,7 +4,7 @@ import {
   callout, el, errorPanel, fmtClock, fmtDate, iconEl, loadingView, relativeTime,
   statusBadge, toast, goTo,
 } from "../../core/ui.js";
-import { getThreshold } from "../../app/session.js";
+import { getThreshold } from "../../runtime/session.js";
 import { panel } from "../../components/page.js";
 import { countdownChip, nextClass } from "../../components/schedule.js";
 
