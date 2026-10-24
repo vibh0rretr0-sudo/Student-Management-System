@@ -1,5 +1,5 @@
 -- JECRC Student & Faculty Portal — MySQL 8 schema
--- Load with: mysql -u jecrc -p jecrc_portal < database/schema.sql
+-- Load with: mysql -u jecrc -p jecrc_portal < schema/schema.sql
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;

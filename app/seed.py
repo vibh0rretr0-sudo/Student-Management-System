@@ -2,7 +2,7 @@
 
 Runs against either engine (see app/db.py).  Attendance covers ten weeks of
 the real timetable derived from weekdays, so the dashboard always has
-"today" classes.  Also emits database/seed.sql for the MySQL deployment.
+"today" classes.  Also emits schema/seed.sql for the MySQL deployment.
 """
 from __future__ import annotations
 
@@ -465,7 +465,7 @@ def seed(db: Database, upload_dir: str | Path) -> dict:
 
 
 # --------------------------------------------------------------------------
-# MySQL dump (database/seed.sql)
+# MySQL dump (schema/seed.sql)
 # --------------------------------------------------------------------------
 DUMP_TABLES = [
     "users", "batches", "subjects", "students", "professors", "batch_subjects",
