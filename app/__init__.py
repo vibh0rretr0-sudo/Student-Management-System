@@ -29,7 +29,7 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     from .blueprints.auth import bp as auth_bp
     from .blueprints.common import bp as common_bp
-    from .blueprints.pages import bp as pages_bp
+    from .blueprints.main import bp as pages_bp
     from .blueprints.professor import bp as professor_bp
     from .blueprints.student import bp as student_bp
 
