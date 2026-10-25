@@ -52,18 +52,28 @@ function showSlide(index) {
 
 async function buildSlideshow() {
   try {
-    const response = await api("/api/common/campus-images", { authRedirect: false });
-    images = response.data.images || [];
+    // Using the actual jpeg files found in static/img/campus
+    images = [
+      { url: "/static/img/campus/1611837473phpHm8M7k.jpeg", name: "Campus View 1" },
+      { url: "/static/img/campus/1611837489phpodvXL0.jpeg", name: "Campus View 2" },
+      { url: "/static/img/campus/1611837617phpISGBKn.jpeg", name: "Campus View 3" },
+      { url: "/static/img/campus/1742973665phpbybRrQ.jpeg", name: "Campus View 4" },
+      { url: "/static/img/campus/1742973714phpshPA2z.jpeg", name: "Campus View 5" },
+    ];
   } catch (error) {
-    return; // the gradient background remains
+    return;
   }
   if (!images.length) return;
+
+  slideshow.innerHTML = "";
+  dotsHost.innerHTML = "";
+  slides = [];
 
   images.forEach((image, index) => {
     const slide = el("div", { class: `slide ${index === 0 ? "is-active" : ""}`.trim() });
     const img = el("img", {
       src: image.url,
-      alt: "",
+      alt: image.name,
       loading: index === 0 ? "eager" : "lazy",
       decoding: "async",
       fetchpriority: index === 0 ? "high" : "auto",
