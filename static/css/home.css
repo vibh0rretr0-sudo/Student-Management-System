@@ -94,11 +94,11 @@
 }
 
 .home__brand { color: #fff; }
-.home__brand .brand__mark {
-  background: rgba(255, 255, 255, 0.14);
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  backdrop-filter: blur(10px);
-  box-shadow: 0 14px 34px -18px rgba(0, 0, 0, 0.7);
+.home__brand .brand__logo-img {
+  height: 24px;
+  width: auto;
+  object-fit: contain;
+  display: block;
 }
 .home__brand .brand__name { color: #fff; text-shadow: 0 1px 14px rgba(0, 0, 0, 0.35); }
 .home__brand .brand__sub { color: rgba(255, 255, 255, 0.72); }
@@ -231,7 +231,12 @@
   border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
   margin-bottom: 24px;
 }
-.home-card__brand .brand__mark { width: 46px; height: 46px; border-radius: 13px; font-size: 14px; }
+.home-card__brand .brand__logo-img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+  display: block;
+}
 .home-card__brand .brand__name { font-size: 13px; }
 .home-card__brand .brand__sub { font-size: 10px; }
 
