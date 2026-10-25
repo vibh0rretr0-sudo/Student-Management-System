@@ -13,11 +13,11 @@
   <link rel="stylesheet" href="/static/css/components.css">
   <link rel="stylesheet" href="/static/css/app.css">
 </head>
-<body class="app-body">
+<body class="app-body bg-gray-50 text-gray-900 dark:bg-[#09090b] dark:text-zinc-100 transition-colors duration-200">
   <a class="skip-link" href="#view">Skip to content</a>
 
   <div class="app-shell" id="app-shell">
-    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
+    <aside class="sidebar bg-white border-r border-gray-200 dark:bg-[#121212] dark:border-[#27272a]" id="sidebar" aria-label="Main navigation">
       <div class="sidebar__brand">
         <div class="brand-group">
           <img src="/static/img/logo.png" alt="JECRC Logo" class="brand__logo-img">
@@ -51,7 +51,7 @@
     </aside>
 
     <div class="app-main">
-      <header class="topbar" id="topbar">
+      <header class="topbar bg-white/80 border-b border-gray-200 dark:bg-[#09090b]/80 dark:border-[#27272a] backdrop-blur-md" id="topbar">
         <div class="topbar__left">
           <div class="crumbs">
             <span class="crumbs__root" id="breadcrumb-root">Portal</span>
@@ -64,7 +64,7 @@
             <span class="clock__time" id="clock-time">--:--</span>
             <span class="clock__date" id="clock-date"></span>
           </div>
-          <button class="search-trigger" type="button" id="search-trigger"
+          <button class="search-trigger bg-gray-100 border border-gray-200 dark:bg-[#18181b] dark:border-[#27272a] rounded-md text-sm text-[var(--text)]" type="button" id="search-trigger"
                   aria-label="Search portal (Control K)">
             <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
               <circle cx="11" cy="11" r="7"></circle>
