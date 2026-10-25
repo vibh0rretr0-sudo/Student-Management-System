@@ -59,9 +59,9 @@
       color-mix(in srgb, var(--canvas) 18%, transparent) 52%,
       color-mix(in srgb, var(--canvas) 78%, transparent) 100%),
     linear-gradient(100deg,
-      color-mix(in srgb, #071225 55%, transparent) 0%,
-      color-mix(in srgb, #071225 20%, transparent) 46%,
-      color-mix(in srgb, #071225 48%, transparent) 100%);
+      color-mix(in srgb, var(--canvas) 55%, transparent) 0%,
+      color-mix(in srgb, var(--canvas) 20%, transparent) 46%,
+      color-mix(in srgb, var(--canvas) 48%, transparent) 100%);
   backdrop-filter: blur(1.5px) saturate(1.05);
 }
 [data-theme="light"] .home__scrim {
@@ -72,9 +72,9 @@
       rgba(247, 249, 253, 0.38) 62%,
       rgba(244, 246, 251, 0.9) 100%),
     linear-gradient(100deg,
-      rgba(8, 20, 40, 0.42) 0%,
-      rgba(8, 20, 40, 0.12) 48%,
-      rgba(8, 20, 40, 0.34) 100%);
+      rgba(248, 250, 255, 0.42) 0%,
+      rgba(248, 250, 255, 0.12) 48%,
+      rgba(248, 250, 255, 0.34) 100%);
 }
 
 /* ---- Header ------------------------------------------------------------- */
