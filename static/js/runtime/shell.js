@@ -16,6 +16,7 @@ export function buildShell(boot, navItems) {
   /* ---------------------------------------------------------- Sidebar */
   function applyCollapsed(collapsed, persist = true) {
     shellEl.classList.toggle("is-collapsed", collapsed);
+    if (!collapseButton) return;
     collapseButton.setAttribute("aria-expanded", String(!collapsed));
     collapseButton.setAttribute("aria-label", collapsed ? "Expand sidebar" : "Collapse sidebar");
     collapseButton.setAttribute("title", collapsed ? "Expand sidebar (Ctrl+B)" : "Collapse sidebar (Ctrl+B)");
@@ -32,6 +33,7 @@ export function buildShell(boot, navItems) {
     }
   }
 
+
   navItems.forEach((item) => {
     const link = el("a", {
       class: "nav__item", href: `#${item.path}`, "data-nav": item.path,
@@ -45,9 +47,11 @@ export function buildShell(boot, navItems) {
     collapsed = localStorage.getItem(SIDEBAR_KEY) === "1";
   } catch (error) { /* ignore */ }
   applyCollapsed(collapsed, false);
-  collapseButton.addEventListener("click", () => {
-    applyCollapsed(!shellEl.classList.contains("is-collapsed"));
-  });
+  if (collapseButton) {
+    collapseButton.addEventListener("click", () => {
+      applyCollapsed(!shellEl.classList.contains("is-collapsed"));
+    });
+  }
 
   /* ---------------------------------------------------------- Avatars */
   function paintAvatar(targetId, size) {
