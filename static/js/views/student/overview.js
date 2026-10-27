@@ -256,7 +256,7 @@ export async function render(container) {
 
   /* ---------------------------------------------------------- Charts */
   await Promise.all([
-    doughnutChart(chartCanvas, { value: overall.percentage, threshold }),
+    doughnutChart(chartCanvas, { value: overall.percentage, threshold, cutout: "85%" }),
     lineChart(trendCanvas, {
       labels: data.trend.map((item) => item.label),
       values: data.trend.map((item) => item.percentage),

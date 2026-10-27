@@ -1,6 +1,6 @@
 import { api } from "../../core/api.js";
 import {
-  el, errorPanel, iconEl, loadingView, openDrawer, toast,
+  el, errorPanel, iconEl, loadingView, openDrawer, toast, openModal, formField, busyButton,
 } from "../../core/ui.js";
 import { dataTable } from "../../components/table.js";
 import { pageHeader, panel } from "../../components/page.js";
@@ -90,7 +90,21 @@ export async function render(container) {
       title: batch.name,
       subtitle: `${batch.code} · ${batch.students} students`,
       body,
-      footer: [{ label: "Close", variant: "secondary" }],
+      footer: [
+        {
+          label: "Add Student",
+          variant: "primary",
+          icon: "plus",
+          onClick: () => openAddStudentModal(batch)
+        },
+        {
+          label: "Bulk Import",
+          variant: "secondary",
+          icon: "upload",
+          onClick: () => openBulkImportModal(batch)
+        },
+        { label: "Close", variant: "ghost" },
+      ],
     });
 
     async function loadRoster() {
@@ -107,10 +121,22 @@ export async function render(container) {
 
     function paintRoster() {
       body.innerHTML = "";
-      const filters = el("div", { class: "filters", style: { padding: "0 0 12px" } },
+
+      const actions = el("div", { class: "row-between", style: { marginBottom: "16px", display: "flex", justifyContent: "flex-end", gap: "8px" } },
+        el("button", {
+          class: "btn btn--secondary btn--sm", type: "button",
+          onclick: () => openAddStudentModal(batch)
+        }, iconEl("plus"), "Add Student"),
+        el("button", {
+          class: "btn btn--ghost btn--sm", type: "button",
+          onclick: () => openBulkImportModal(batch)
+        }, iconEl("upload"), "Bulk Import"));
+
+      const filters = el("div", { class: "filters", style: { padding: "0 0 12px", display: "flex", alignItems: "center", gap: "12px" } },
         el("div", { class: "search-field" }, iconEl("search"), search),
-        el("label", { class: "check", style: { paddingTop: "8px" } },
+        el("label", { class: "check", style: { paddingTop: "8px", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" } },
           lowOnly, el("span", {}, "Below 75% only")));
+
       const host = el("div", {});
 
       const renderRows = () => {
@@ -148,11 +174,77 @@ export async function render(container) {
       };
       search.addEventListener("input", renderRows);
       lowOnly.addEventListener("change", renderRows);
-      body.append(filters, host);
+      body.append(actions, filters, host);
       renderRows();
     }
 
     loadRoster();
     return drawer;
+  }
+
+  function openAddStudentModal(batch) {
+    const roll = formField("text", "Roll Number", { placeholder: "e.g. 2021CS01" });
+    const name = formField("text", "Full Name", { placeholder: "e.g. John Doe" });
+
+    const submit = busyButton("Add Student", async () => {
+      try {
+        const res = await api("/api/professor/students/add", {
+          method: "POST",
+          body: { batch_id: batch.id, roll_no: roll.value, full_name: name.value },
+        });
+        toast(res.data.message, "success");
+        openRoster(batch); // Refresh roster
+      } catch (error) {
+        toast(error.message, "error");
+      }
+    });
+
+    openModal({
+      title: `Add Student to ${batch.name}`,
+      body: el("div", { class: "stack-sm" }, roll, name, el("div", { class: "row-actions" }, submit)),
+    });
+  }
+
+  function openBulkImportModal(batch) {
+    const fileInput = el("input", {
+      type: "file",
+      class: "input",
+      accept: ".csv,.xlsx",
+      onchange: (e) => {
+        // Store the file on the submit button's logic
+        submit.dataset.file = e.target.files[0];
+      }
+    });
+
+    const submit = busyButton("Import Students", async () => {
+      const file = fileInput.files[0];
+      if (!file) {
+        toast("Please select a file first.", "warning");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("batch_id", batch.id);
+      formData.append("file", file);
+
+      try {
+        const res = await api("/api/professor/students/import", {
+          method: "POST",
+          body: formData,
+        });
+        toast(res.data.message, "success");
+        openRoster(batch); // Refresh roster
+      } catch (error) {
+        toast(error.message, "error");
+      }
+    });
+
+    openModal({
+      title: `Bulk Import: ${batch.name}`,
+      body: el("div", { class: "stack-sm" },
+        el("p", { class: "muted", style: { fontSize: "12px" } }, "Upload a CSV or Excel file containing student details."),
+        fileInput,
+        el("div", { class: "row-actions" }, submit)),
+    });
   }
 }

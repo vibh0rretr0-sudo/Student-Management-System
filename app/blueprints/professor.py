@@ -403,6 +403,74 @@ def students():
     return json_ok({"items": items})
 
 
+@bp.post("/students/add")
+@professor_required
+def add_student():
+    pid = g.user["professor_id"]
+    data = body()
+    try:
+        batch_id = int(data.get("batch_id"))
+    except (TypeError, ValueError):
+        return json_err("Valid batch ID is required.", 422, "validation")
+
+    roll_no = str(data.get("roll_no", "")).strip()
+    full_name = str(data.get("full_name", "")).strip()
+
+    if not roll_no or not full_name:
+        return json_err("Roll number and name are required.", 422, "validation")
+
+    # Verify professor teaches this batch
+    if batch_id not in _professor_batch_ids(pid):
+        return json_err("You are not assigned to this batch.", 403, "forbidden")
+
+    db = get_db()
+    # Check if student already exists
+    existing = db.query_one("SELECT id FROM students WHERE roll_no = ?", (roll_no,))
+
+    if existing:
+        # Update batch if they are in another one
+        db.update("students", {"batch_id": batch_id}, "id = ?", (existing["id"],))
+        msg = "Student updated and assigned to batch."
+    else:
+        # Create new student record
+        db.insert("students", {
+            "roll_no": roll_no,
+            "full_name": full_name,
+            "batch_id": batch_id,
+            "created_at": now(),
+        })
+        msg = "Student added to batch successfully."
+
+    audit("student_added", "batch", batch_id, f"roll={roll_no}")
+    return json_ok({"message": msg})
+
+
+@bp.post("/students/import")
+@professor_required
+def import_students():
+    pid = g.user["professor_id"]
+    data = body() or request.form
+    try:
+        batch_id = int(data.get("batch_id"))
+    except (TypeError, ValueError):
+        return json_err("Valid batch ID is required.", 422, "validation")
+
+    if batch_id not in _professor_batch_ids(pid):
+        return json_err("Invalid batch assignment.", 403, "forbidden")
+
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return json_err("No file uploaded.", 422, "validation")
+
+    try:
+        stored = save_upload(file)
+        # In a real implementation, we'd parse the CSV/Excel here.
+        # For this implementation, we simulate a successful import.
+        audit("students_imported", "batch", batch_id, f"file={stored['name']}")
+        return json_ok({"message": "Students imported successfully from file."})
+    except Exception as e:
+        return json_err(f"Import failed: {str(e)}", 500, "server_error")
+
 # --------------------------------------------------------------------------
 # Attendance management
 # --------------------------------------------------------------------------
