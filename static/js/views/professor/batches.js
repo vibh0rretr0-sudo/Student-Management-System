@@ -5,10 +5,12 @@ import {
 import { dataTable } from "../../components/table.js";
 import { pageHeader, panel } from "../../components/page.js";
 import { goTo } from "../../core/ui.js";
+import { getThreshold } from "../../runtime/session.js";
 
 export const title = "My Batches";
 
 export async function render(container) {
+  const threshold = getThreshold();
   container.append(loadingView("table"));
   let data;
   try {
@@ -55,7 +57,7 @@ export async function render(container) {
         el("div", { class: "batch-card__stat" },
           el("b", { class: batch.low_attendance ? "text-danger" : "" },
             String(batch.low_attendance)),
-          el("span", {}, "Below 75%"))),
+           el("span", {}, `Below ${threshold}%`))),
       subjects,
       el("div", { class: "cluster", style: { marginTop: "14px" } },
         el("button", {
@@ -135,7 +137,7 @@ export async function render(container) {
       const filters = el("div", { class: "filters", style: { padding: "0 0 12px", display: "flex", alignItems: "center", gap: "12px" } },
         el("div", { class: "search-field" }, iconEl("search"), search),
         el("label", { class: "check", style: { paddingTop: "8px", display: "flex", alignItems: "center", gap: "6px", cursor: "pointer" } },
-          lowOnly, el("span", {}, "Below 75% only")));
+           lowOnly, el("span", {}, `Below ${threshold}% only`)));
 
       const host = el("div", {});
 
@@ -143,7 +145,7 @@ export async function render(container) {
         host.innerHTML = "";
         const query = search.value.trim().toLowerCase();
         const rows = students.filter((student) => {
-          if (lowOnly.checked && student.percentage >= 75) return false;
+           if (lowOnly.checked && student.percentage >= threshold) return false;
           if (!query) return true;
           return `${student.name} ${student.roll_no}`.toLowerCase().includes(query);
         });
@@ -164,7 +166,7 @@ export async function render(container) {
             {
               key: "percentage", label: "Attendance", align: "right", sortable: true,
               render: (row) => el("span", {
-                class: `badge badge--${row.percentage >= 75 ? "success" : row.percentage >= 65 ? "warning" : "danger"}`,
+                 class: `badge badge--${row.percentage >= threshold ? "success" : row.percentage >= threshold - 10 ? "warning" : "danger"}`,
               }, `${row.percentage}%`),
             },
           ],
@@ -183,25 +185,44 @@ export async function render(container) {
   }
 
   function openAddStudentModal(batch) {
-    const roll = formField("text", "Roll Number", { placeholder: "e.g. 2021CS01" });
-    const name = formField("text", "Full Name", { placeholder: "e.g. John Doe" });
-
-    const submit = busyButton("Add Student", async () => {
-      try {
-        const res = await api("/api/professor/students/add", {
-          method: "POST",
-          body: { batch_id: batch.id, roll_no: roll.value, full_name: name.value },
-        });
-        toast(res.data.message, "success");
-        openRoster(batch); // Refresh roster
-      } catch (error) {
-        toast(error.message, "error");
-      }
+    const roll = formField({
+      label: "Roll Number", name: "roll_no", placeholder: "e.g. 26CSAI120",
+    });
+    const name = formField({
+      label: "Full Name", name: "full_name", placeholder: "e.g. John Doe",
+    });
+    const submit = el("button", { class: "btn btn--primary", type: "button" },
+      el("span", { class: "spinner", "aria-hidden": "true" }),
+      el("span", { class: "btn__label" }, "Add Student"));
+    const ui = openModal({
+      title: `Add Student to ${batch.name}`,
+      body: el("div", { class: "stack-sm" }, roll.wrapper, name.wrapper,
+        el("div", { class: "row-actions" }, submit)),
     });
 
-    openModal({
-      title: `Add Student to ${batch.name}`,
-      body: el("div", { class: "stack-sm" }, roll, name, el("div", { class: "row-actions" }, submit)),
+    submit.addEventListener("click", async () => {
+      if (!roll.input.value.trim() || !name.input.value.trim()) {
+        toast("Roll number and full name are required.", "warning");
+        return;
+      }
+      await busyButton(submit, async () => {
+        try {
+          const res = await api("/api/professor/students/add", {
+            method: "POST",
+            body: { batch_id: batch.id, roll_no: roll.input.value.trim(),
+              full_name: name.input.value.trim() },
+          });
+          const credentials = res.data.temporary_password
+            ? ` Username: ${res.data.username}; temporary password: ${res.data.temporary_password}`
+            : "";
+          toast(`${res.data.message}${credentials}`, "success", { duration: 10000 });
+          ui.close();
+          drawer.close();
+          openRoster(batch);
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      });
     });
   }
 
@@ -209,42 +230,43 @@ export async function render(container) {
     const fileInput = el("input", {
       type: "file",
       class: "input",
-      accept: ".csv,.xlsx",
-      onchange: (e) => {
-        // Store the file on the submit button's logic
-        submit.dataset.file = e.target.files[0];
-      }
+      accept: ".csv",
     });
 
-    const submit = busyButton("Import Students", async () => {
+    const submit = el("button", { class: "btn btn--primary", type: "button" },
+      el("span", { class: "spinner", "aria-hidden": "true" }),
+      el("span", { class: "btn__label" }, "Import Students"));
+    const ui = openModal({
+      title: `Bulk Import: ${batch.name}`,
+      body: el("div", { class: "stack-sm" },
+        el("p", { class: "muted", style: { fontSize: "12px" } },
+          "Upload a UTF-8 CSV file with roll_no and full_name columns."),
+        fileInput,
+        el("div", { class: "row-actions" }, submit)),
+    });
+
+    submit.addEventListener("click", async () => {
       const file = fileInput.files[0];
       if (!file) {
         toast("Please select a file first.", "warning");
         return;
       }
-
-      const formData = new FormData();
-      formData.append("batch_id", batch.id);
-      formData.append("file", file);
-
-      try {
-        const res = await api("/api/professor/students/import", {
-          method: "POST",
-          body: formData,
-        });
-        toast(res.data.message, "success");
-        openRoster(batch); // Refresh roster
-      } catch (error) {
-        toast(error.message, "error");
-      }
-    });
-
-    openModal({
-      title: `Bulk Import: ${batch.name}`,
-      body: el("div", { class: "stack-sm" },
-        el("p", { class: "muted", style: { fontSize: "12px" } }, "Upload a CSV or Excel file containing student details."),
-        fileInput,
-        el("div", { class: "row-actions" }, submit)),
+      await busyButton(submit, async () => {
+        const formData = new FormData();
+        formData.append("batch_id", batch.id);
+        formData.append("file", file);
+        try {
+          const res = await api("/api/professor/students/import", {
+            method: "POST", form: formData,
+          });
+          toast(res.data.message, "success");
+          ui.close();
+          drawer.close();
+          openRoster(batch);
+        } catch (error) {
+          toast(error.message, "error");
+        }
+      });
     });
   }
 }

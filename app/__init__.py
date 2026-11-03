@@ -5,6 +5,7 @@ import logging
 import secrets
 from pathlib import Path
 
+import click
 from flask import Flask, g, redirect, render_template, request
 
 from config import BASE_DIR, Config
@@ -23,6 +24,15 @@ def create_app(test_config: dict | None = None) -> Flask:
     app.config.from_object(Config)
     if test_config:
         app.config.update(test_config)
+
+    if not 1 <= int(app.config["ATTENDANCE_THRESHOLD"]) <= 100:
+        raise ValueError("ATTENDANCE_THRESHOLD must be between 1 and 100")
+    if int(app.config["SESSION_IDLE_MINUTES"]) <= 0:
+        raise ValueError("SESSION_IDLE_MINUTES must be positive")
+    if not 0 < int(app.config["SESSION_WARN_MINUTES"]) < int(app.config["SESSION_IDLE_MINUTES"]):
+        raise ValueError("SESSION_WARN_MINUTES must be below SESSION_IDLE_MINUTES")
+    if int(app.config["MAX_CONTENT_LENGTH"]) <= 0:
+        raise ValueError("MAX_UPLOAD_MB must be positive")
 
     Path(app.config["UPLOAD_DIR"]).mkdir(parents=True, exist_ok=True)
     app.config.setdefault("SEND_FILE_MAX_AGE_DEFAULT", 3600)
@@ -123,7 +133,8 @@ def create_app(test_config: dict | None = None) -> Flask:
 
     @app.errorhandler(413)
     def too_large(_error):
-        message = "That file is larger than the 10 MB upload limit."
+        max_mb = app.config["MAX_CONTENT_LENGTH"] / (1024 * 1024)
+        message = f"That file is larger than the {max_mb:g} MB upload limit."
         if wants_json():
             return json_err(message, 413, "file_too_large")
         return render_template("error.html", status=413,
@@ -136,6 +147,15 @@ def create_app(test_config: dict | None = None) -> Flask:
         return render_template("error.html", status=403, title="Access denied",
                                message="Your account doesn't have access to this "
                                        "resource."), 403
+
+    @app.errorhandler(405)
+    def method_not_allowed(_error):
+        if wants_json():
+            return json_err("That method is not allowed for this resource.", 405,
+                            "method_not_allowed")
+        return render_template("error.html", status=405,
+                               title="Method not allowed",
+                               message="That action is not available here."), 405
 
     @app.errorhandler(500)
     def server_error(error):
@@ -152,13 +172,12 @@ def create_app(test_config: dict | None = None) -> Flask:
     # CLI helpers
     # ------------------------------------------------------------------
     @app.cli.command("init-db")
-    def init_db_command():
+    @click.option("--drop", is_flag=True, help="Drop existing tables first.")
+    def init_db_command(drop: bool):
         """Create (or recreate with --drop) the database schema."""
-        import click
-
         from .db import init_db
 
-        init_db(app, drop="--drop" in __import__("sys").argv)
+        init_db(app, drop=drop)
         click.echo("Schema created.")
 
     @app.cli.command("seed-db")

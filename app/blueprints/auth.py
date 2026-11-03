@@ -1,7 +1,7 @@
 """Authentication: CSRF bootstrap, login, logout, session, heartbeat."""
 from __future__ import annotations
 
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, g, request
 
 from ..db import get_db
 from ..security import (
@@ -109,6 +109,7 @@ def login():
     token = create_session(user["id"], remember=remember,
                            replace_token=previous["token"] if previous else None)
     profile = load_profile()
+    g.user = profile
     audit("login", "user", user["id"], f"role={role}")
 
     response = json_ok({
@@ -125,6 +126,9 @@ def login():
 def logout():
     row = session_row()
     if row and row.get("user_id"):
+        profile = load_profile()
+        if profile:
+            g.user = profile
         audit("logout", "user", row["user_id"])
     clear_session()
     response = json_ok({"message": "Signed out."})
@@ -140,11 +144,15 @@ def session_info():
 
     if not profile:
         anonymous = ensure_anonymous_session()
-        return json_ok({
+        response = json_ok({
             "authenticated": False,
             "csrf_token": anonymous["csrf_token"],
             "server_time": iso(now()),
         })
+        set_session_cookie(response, anonymous["token"],
+                           bool(anonymous.get("remember")))
+        response.headers["Cache-Control"] = "no-store"
+        return response
 
     response = json_ok({
         "authenticated": True,
@@ -169,6 +177,9 @@ def heartbeat():
     db = get_db()
     db.execute("UPDATE sessions SET last_seen = ? WHERE token = ?",
                (now(), row["token"]))
+    profile = load_profile()
+    if profile:
+        g.user = profile
     audit("heartbeat", "session", None, "")
     response = json_ok({
         "extended": True,

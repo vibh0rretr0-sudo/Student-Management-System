@@ -195,7 +195,7 @@ def init_db(app, drop: bool = False):
     """Create the schema from the matching SQL file."""
     engine = app.config["DB_ENGINE"]
     filename = "schema_sqlite.sql" if engine == "sqlite" else "schema.sql"
-    schema_path = Path(app.root_path).parent / "database" / filename
+    schema_path = Path(app.root_path).parent / "schema" / filename
     sql = schema_path.read_text(encoding="utf-8")
 
     db = db_from_config(app.config)

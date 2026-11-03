@@ -22,7 +22,7 @@ from ..utils import (
     parse_date,
     parse_datetime,
     save_upload,
-    delete_upload,
+    delete_upload_if_unreferenced,
     valid_email,
     valid_phone,
 )
@@ -549,7 +549,8 @@ def submit_assignment(assignment_id: int):
             "status": "submitted",
         }, "id = ?", (existing["id"],))
         if old_file:
-            delete_upload(old_file)
+            delete_upload_if_unreferenced(old_file, kind="submission",
+                                          entity_id=existing["id"])
         submission_id = existing["id"]
     else:
         submission_id = db.insert("submissions", {

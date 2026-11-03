@@ -40,6 +40,14 @@ def _int(name: str, default: int) -> int:
         return default
 
 
+def _path(name: str, default: str) -> str:
+    value = os.environ.get(name, default)
+    if value == ":memory:":
+        return value
+    path = Path(value)
+    return str(path if path.is_absolute() else BASE_DIR / path)
+
+
 class Config:
     ENV_NAME = os.environ.get("FLASK_ENV", os.environ.get("APP_ENV", "development"))
     DEBUG = _bool("FLASK_DEBUG", ENV_NAME != "production")
@@ -49,7 +57,7 @@ class Config:
 
     # Relational database.  mysql (PyMySQL) or sqlite.
     DB_ENGINE = os.environ.get("DB_ENGINE", "sqlite").strip().lower()
-    SQLITE_PATH = os.environ.get("SQLITE_PATH", str(BASE_DIR / "instance" / "jecrc.sqlite3"))
+    SQLITE_PATH = _path("SQLITE_PATH", str(BASE_DIR / "instance" / "jecrc.sqlite3"))
     MYSQL_HOST = os.environ.get("MYSQL_HOST", "127.0.0.1")
     MYSQL_PORT = _int("MYSQL_PORT", 3306)
     MYSQL_USER = os.environ.get("MYSQL_USER", "jecrc")
@@ -66,7 +74,7 @@ class Config:
     SESSION_COOKIE_SECURE = _bool("SESSION_COOKIE_SECURE", ENV_NAME == "production")
 
     # Uploads
-    UPLOAD_DIR = os.environ.get("UPLOAD_DIR", str(BASE_DIR / "instance" / "uploads"))
+    UPLOAD_DIR = _path("UPLOAD_DIR", str(BASE_DIR / "instance" / "uploads"))
     MAX_CONTENT_LENGTH = _int("MAX_UPLOAD_MB", 10) * 1024 * 1024
     ALLOWED_UPLOAD_EXTENSIONS = {"pdf", "png", "jpg", "jpeg", "docx", "zip"}
     ALLOWED_PHOTO_EXTENSIONS = {"png", "jpg", "jpeg", "webp"}
@@ -88,4 +96,4 @@ class TestConfig(Config):
     DB_ENGINE = "sqlite"
     SQLITE_PATH = ":memory:"
     SESSION_COOKIE_SECURE = False
-    LOGIN_MAX_ATTEMPTS = 5
+    LOGIN_MAX_ATTEMPTS = 3

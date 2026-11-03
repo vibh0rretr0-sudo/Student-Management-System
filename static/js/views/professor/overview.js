@@ -5,6 +5,7 @@ import {
 } from "../../core/ui.js";
 import { panel } from "../../components/page.js";
 import { countdownChip } from "../../components/schedule.js";
+import { getThreshold } from "../../runtime/session.js";
 
 export const title = "Overview";
 
@@ -24,6 +25,7 @@ export async function render(container) {
 
   container.innerHTML = "";
   const now = new Date();
+  const threshold = getThreshold();
   const greeting = now.getHours() < 12 ? "Good morning"
     : now.getHours() < 17 ? "Good afternoon" : "Good evening";
 
@@ -53,7 +55,7 @@ export async function render(container) {
         el("div", {},
           el("div", { class: "batch-card__name" }, card.batch_name),
           el("div", { class: "batch-card__code" }, `${card.batch_code} · ${card.subject_code}`)),
-        el("span", { class: `badge badge--${card.average_attendance >= 75 ? "success" : "warning"}` },
+         el("span", { class: `badge badge--${card.average_attendance >= threshold ? "success" : "warning"}` },
           `${card.average_attendance}% avg`)),
       el("div", { class: "batch-card__stats" },
         el("div", { class: "batch-card__stat" },
@@ -210,10 +212,10 @@ export async function render(container) {
           el("div", { class: "tiny muted" }, `${item.roll_no} · ${item.batch}`)),
         el("span", { class: "badge badge--danger" }, `${item.percentage}%`))))
     : el("div", { class: "callout callout--success" }, iconEl("shield"),
-      el("span", {}, "Every student in your batches is above 75%."));
+       el("span", {}, `Every student in your batches is above ${threshold}%.`));
   side.append(panel({
     title: "Low attendance",
-    subtitle: "Below the 75% eligibility line",
+     subtitle: `Below the ${threshold}% eligibility line`,
     actions: [el("button", {
       class: "btn btn--ghost btn--sm", type: "button",
       onclick: () => goTo("/#/batches"),

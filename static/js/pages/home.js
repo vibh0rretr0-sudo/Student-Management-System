@@ -375,7 +375,11 @@ loginForm.addEventListener("submit", async (event) => {
     const card = document.getElementById("home-card");
     card.classList.add("is-leaving");
     document.querySelector(".home").classList.add("is-leaving");
-    window.setTimeout(() => window.location.assign("/app"), 460);
+    window.setTimeout(() => {
+      const next = sessionStorage.getItem("jecrc-login-next");
+      sessionStorage.removeItem("jecrc-login-next");
+      window.location.assign(next && next.startsWith("/") ? next : "/app");
+    }, 460);
   } catch (error) {
     submitting = false;
     submitButton.classList.remove("is-loading");
@@ -408,6 +412,8 @@ document.addEventListener("keydown", (event) => {
 const query = new URLSearchParams(window.location.search);
 if (query.get("expired") === "1") {
   toast("Your session ended for security. Please sign in again.", "warning", { duration: 7000 });
+  const next = query.get("next");
+  if (next) sessionStorage.setItem("jecrc-login-next", next);
   window.history.replaceState(null, "", window.location.pathname);
 }
 

@@ -103,7 +103,9 @@ def valid_email(value) -> bool:
 
 
 def valid_phone(value) -> bool:
-    return bool(value) and bool(PHONE_RE.fullmatch(str(value).strip()))
+    text = str(value).strip() if value else ""
+    return bool(text) and bool(PHONE_RE.fullmatch(text)) \
+        and 7 <= sum(char.isdigit() for char in text) <= 15
 
 
 def paginate(default_per: int = 20, max_per: int = 100):
@@ -131,15 +133,12 @@ def page_meta(page: int, per: int, total: int) -> dict:
 # Audit / notifications
 # --------------------------------------------------------------------------
 def client_ip() -> str:
-    forwarded = request.headers.get("X-Forwarded-For", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()[:45]
     return (request.remote_addr or "")[:45]
 
 
 def audit(action: str, entity: str = "", entity_id=None, meta: str = ""):
     try:
-        sess = getattr(g, "session", None) or {}
+        sess = getattr(g, "user", None) or getattr(g, "session", None) or {}
         get_db().insert("audit_log", {
             "user_id": sess.get("user_id"),
             "action": action,
@@ -194,7 +193,8 @@ def save_upload(file_storage, allowed: set[str] | None = None) -> dict | None:
         raise ValueError("The uploaded file is empty.")
     if size > current_app.config["MAX_CONTENT_LENGTH"]:
         target.unlink(missing_ok=True)
-        raise ValueError("File is larger than the 10 MB limit.")
+        max_mb = current_app.config["MAX_CONTENT_LENGTH"] / (1024 * 1024)
+        raise ValueError(f"File is larger than the {max_mb:g} MB limit.")
     return {
         "stored": stored,
         "name": original[:180],
@@ -211,6 +211,31 @@ def delete_upload(stored: str):
         path.unlink(missing_ok=True)
     except OSError:
         pass
+
+
+def delete_upload_if_unreferenced(stored: str, *, kind: str, entity_id: int):
+    """Delete an upload only when no remaining record points at it."""
+    if not stored:
+        return
+    db = get_db()
+    if kind == "submission":
+        row = db.query_one(
+            """SELECT 1 FROM submissions WHERE file_path = ? AND id <> ?
+               UNION ALL
+               SELECT 1 FROM assignments WHERE attachment_path = ? LIMIT 1""",
+            (stored, entity_id, stored),
+        )
+    elif kind == "assignment":
+        row = db.query_one(
+            """SELECT 1 FROM assignments WHERE attachment_path = ? AND id <> ?
+               UNION ALL
+               SELECT 1 FROM submissions WHERE file_path = ? LIMIT 1""",
+            (stored, entity_id, stored),
+        )
+    else:
+        raise ValueError(f"Unknown upload reference kind: {kind}")
+    if not row:
+        delete_upload(stored)
 
 
 def human_size(size) -> str:

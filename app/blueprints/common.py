@@ -77,6 +77,8 @@ def detailed_profile(profile: dict) -> dict:
                WHERE s.id = ?""",
             (profile["student_id"],),
         )
+        base["email"] = row["email"] or ""
+        base["phone"] = row["phone"] or ""
         base.update({
             "roll_no": row["roll_no"], "full_name": row["full_name"],
             "branch": row["branch"] or row["batch_branch"],
@@ -100,6 +102,8 @@ def detailed_profile(profile: dict) -> dict:
     else:
         row = db.query_one("SELECT * FROM professors WHERE id = ?",
                            (profile["professor_id"],))
+        base["email"] = row["email"] or ""
+        base["phone"] = row["phone"] or ""
         teachings = db.query(
             """SELECT s.name AS subject_name, s.code AS subject_code, b.name AS batch_name
                FROM professor_batch_subject pbs
@@ -208,7 +212,9 @@ def change_password():
         fields["new_password"] = "Use at least 8 characters."
     elif not any(c.isalpha() for c in new) or not any(c.isdigit() for c in new):
         fields["new_password"] = "Include at least one letter and one number."
-    if new and confirm and new != confirm:
+    if not confirm:
+        fields["confirm_password"] = "Re-enter the new password."
+    elif new != confirm:
         fields["confirm_password"] = "Passwords do not match."
     if fields:
         return json_err("Please fix the highlighted fields.", 422, "validation",

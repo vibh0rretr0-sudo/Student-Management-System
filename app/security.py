@@ -154,9 +154,13 @@ def check_csrf():
         return None
     row = session_row()
     supplied = request.headers.get("X-CSRF-Token", "")
-    if not row or not supplied or not secrets.compare_digest(
-        str(row.get("csrf_token") or ""), supplied
-    ):
+    try:
+        valid = bool(row and supplied and secrets.compare_digest(
+            str(row.get("csrf_token") or ""), supplied
+        ))
+    except (TypeError, UnicodeEncodeError):
+        valid = False
+    if not valid:
         return json_err("Your security token expired. Refresh the page and try again.",
                         403, "csrf_invalid")
     return None

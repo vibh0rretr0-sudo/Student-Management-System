@@ -1,15 +1,19 @@
 """Professor endpoints: batches, attendance, assignments, announcements."""
 from __future__ import annotations
 
+import csv
 import io
+import math
+import secrets
 import zipfile
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from flask import Blueprint, current_app, g, request, send_file
+from werkzeug.utils import secure_filename
 
 from ..db import get_db
-from ..security import professor_required
+from ..security import hash_password, professor_required
 from ..utils import (
     attendance_stats,
     audit,
@@ -26,7 +30,7 @@ from ..utils import (
     parse_date,
     parse_datetime,
     save_upload,
-    delete_upload,
+    delete_upload_if_unreferenced,
     valid_email,
     valid_phone,
 )
@@ -195,6 +199,44 @@ def _announcement_rows(professor_id: int):
     )
 
 
+def _upsert_student(db, batch: dict, batch_id: int, roll_no: str,
+                    full_name: str) -> tuple[str, str | None]:
+    """Create or move a student and return (action, temporary_password)."""
+    existing = db.query_one("SELECT id FROM students WHERE roll_no = ?", (roll_no,))
+    if existing:
+        db.update("students", {
+            "batch_id": batch_id,
+            "branch": batch["branch"],
+            "semester": batch["semester"],
+            "full_name": full_name,
+        }, "id = ?", (existing["id"],))
+        return "updated", None
+
+    username = roll_no.lower()
+    if db.query_one("SELECT id FROM users WHERE username = ?", (username,)):
+        raise ValueError(f"Roll number {roll_no} already has an account.")
+    temporary_password = secrets.token_urlsafe(9)
+    timestamp = now()
+    user_id = db.insert("users", {
+        "username": username,
+        "password_hash": hash_password(temporary_password),
+        "role": "student",
+        "is_active": 1,
+        "created_at": timestamp,
+        "updated_at": timestamp,
+    })
+    db.insert("students", {
+        "user_id": user_id,
+        "roll_no": roll_no,
+        "full_name": full_name,
+        "branch": batch["branch"],
+        "semester": batch["semester"],
+        "batch_id": batch_id,
+        "created_at": timestamp,
+    })
+    return "created", temporary_password
+
+
 # --------------------------------------------------------------------------
 # Overview
 # --------------------------------------------------------------------------
@@ -219,7 +261,11 @@ def overview():
                FROM attendance WHERE batch_id = ? AND subject_id = ?""",
             (pair["batch_id"], pair["subject_id"]),
         ) or {}
-        stats = attendance_stats(row.get("attended") or 0, row.get("held") or 0)
+        stats = attendance_stats(
+            row.get("attended") or 0,
+            row.get("held") or 0,
+            current_app.config["ATTENDANCE_THRESHOLD"],
+        )
         cards.append({
             "batch_id": pair["batch_id"], "batch_name": pair["batch_name"],
             "batch_code": pair["batch_code"],
@@ -424,25 +470,28 @@ def add_student():
         return json_err("You are not assigned to this batch.", 403, "forbidden")
 
     db = get_db()
-    # Check if student already exists
-    existing = db.query_one("SELECT id FROM students WHERE roll_no = ?", (roll_no,))
-
-    if existing:
-        # Update batch if they are in another one
-        db.update("students", {"batch_id": batch_id}, "id = ?", (existing["id"],))
-        msg = "Student updated and assigned to batch."
-    else:
-        # Create new student record
-        db.insert("students", {
-            "roll_no": roll_no,
-            "full_name": full_name,
-            "batch_id": batch_id,
-            "created_at": now(),
-        })
-        msg = "Student added to batch successfully."
+    batch = db.query_one("SELECT branch, semester FROM batches WHERE id = ?", (batch_id,))
+    if not batch:
+        return json_err("That batch does not exist.", 422, "validation")
+    existing = db.query_one("SELECT batch_id FROM students WHERE roll_no = ?", (roll_no,))
+    if existing and existing["batch_id"] not in _professor_batch_ids(pid):
+        return json_err("You are not assigned to the student's current batch.",
+                        403, "forbidden")
+    try:
+        with db.transaction():
+            action, temporary_password = _upsert_student(
+                db, batch, batch_id, roll_no, full_name)
+    except ValueError as exc:
+        return json_err(str(exc), 409, "duplicate")
 
     audit("student_added", "batch", batch_id, f"roll={roll_no}")
-    return json_ok({"message": msg})
+    if action == "updated":
+        return json_ok({"message": "Student updated and assigned to batch."})
+    return json_ok({
+        "message": "Student added to batch successfully.",
+        "username": roll_no.lower(),
+        "temporary_password": temporary_password,
+    }, status=201)
 
 
 @bp.post("/students/import")
@@ -462,14 +511,64 @@ def import_students():
     if not file or not file.filename:
         return json_err("No file uploaded.", 422, "validation")
 
+    extension = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if extension != "csv":
+        return json_err("Import a UTF-8 CSV file with roll_no and full_name columns.",
+                        422, "invalid_file")
     try:
-        stored = save_upload(file)
-        # In a real implementation, we'd parse the CSV/Excel here.
-        # For this implementation, we simulate a successful import.
-        audit("students_imported", "batch", batch_id, f"file={stored['name']}")
-        return json_ok({"message": "Students imported successfully from file."})
-    except Exception as e:
-        return json_err(f"Import failed: {str(e)}", 500, "server_error")
+        text = file.stream.read(2 * 1024 * 1024).decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(text))
+        headers = {str(value or "").strip().lower()
+                   for value in (reader.fieldnames or [])}
+        if not {"roll_no", "full_name"}.issubset(headers):
+            return json_err("CSV must contain roll_no and full_name columns.",
+                            422, "validation")
+        rows = []
+        for line_number, raw in enumerate(reader, start=2):
+            normalized = {str(key or "").strip().lower(): value
+                          for key, value in raw.items()}
+            roll_no = str(normalized.get("roll_no") or "").strip()
+            full_name = str(normalized.get("full_name") or "").strip()
+            if not roll_no or not full_name:
+                return json_err(f"Row {line_number} needs roll_no and full_name.",
+                                422, "validation")
+            if len(roll_no) > 24 or len(full_name) > 120:
+                return json_err(f"Row {line_number} contains a value that is too long.",
+                                422, "validation")
+            rows.append((roll_no, full_name))
+        if not rows or len(rows) > 5000:
+            return json_err("Import between 1 and 5,000 students.", 422, "validation")
+
+        db = get_db()
+        batch = db.query_one("SELECT branch, semester FROM batches WHERE id = ?", (batch_id,))
+        allowed_batches = set(_professor_batch_ids(pid))
+        for roll_no, _full_name in rows:
+            existing = db.query_one(
+                "SELECT batch_id FROM students WHERE roll_no = ?", (roll_no,))
+            if existing and existing["batch_id"] not in allowed_batches:
+                return json_err(
+                    f"You are not assigned to {roll_no}'s current batch.",
+                    403, "forbidden")
+        created = updated = 0
+        with db.transaction():
+            for roll_no, full_name in rows:
+                action, _temporary_password = _upsert_student(
+                    db, batch, batch_id, roll_no, full_name)
+                if action == "created":
+                    created += 1
+                else:
+                    updated += 1
+        audit("students_imported", "batch", batch_id,
+              f"created={created} updated={updated}")
+        return json_ok({
+            "message": f"Imported {created + updated} student(s).",
+            "created": created,
+            "updated": updated,
+        })
+    except UnicodeDecodeError:
+        return json_err("CSV must be UTF-8 encoded.", 422, "invalid_file")
+    except (csv.Error, ValueError) as exc:
+        return json_err(str(exc), 422, "invalid_file")
 
 # --------------------------------------------------------------------------
 # Attendance management
@@ -554,6 +653,8 @@ def mark_attendance():
         "SELECT id, roll_no FROM students WHERE batch_id = ?", (batch_id,))}
     cleaned = []
     for record in records:
+        if not isinstance(record, dict):
+            return json_err("One of the student rows is invalid.", 422, "validation")
         try:
             student_id = int(record.get("student_id"))
         except (TypeError, ValueError):
@@ -738,11 +839,13 @@ def update_assignment(assignment_id: int):
             "attachment_size": stored["size"],
         })
         if assignment.get("attachment_path"):
-            delete_upload(assignment["attachment_path"])
+            delete_upload_if_unreferenced(assignment["attachment_path"],
+                                          kind="assignment", entity_id=assignment_id)
     elif remove_attachment and assignment.get("attachment_path"):
         updates.update({"attachment_path": None, "attachment_name": None,
                         "attachment_size": None})
-        delete_upload(assignment["attachment_path"])
+        delete_upload_if_unreferenced(assignment["attachment_path"],
+                                      kind="assignment", entity_id=assignment_id)
 
     db.update("assignments", updates, "id = ?", (assignment_id,))
     audit("assignment_updated", "assignment", assignment_id)
@@ -861,7 +964,7 @@ def grade_submission(submission_id: int):
            FROM submissions sub
            JOIN assignments a ON a.id = sub.assignment_id
            JOIN students st ON st.id = sub.student_id
-           WHERE sub.id = ? AND a.professor_id = ?""",
+            WHERE sub.id = ? AND a.professor_id = ? AND a.deleted_at IS NULL""",
         (submission_id, pid),
     )
     if not row:
@@ -872,7 +975,7 @@ def grade_submission(submission_id: int):
     except (TypeError, ValueError):
         return json_err("Enter the marks awarded.", 422, "validation",
                         fields={"marks": "Enter a number."})
-    if marks < 0 or marks > float(row["max_marks"]):
+    if not math.isfinite(marks) or marks < 0 or marks > float(row["max_marks"]):
         return json_err(f"Marks must be between 0 and {row['max_marks']}.", 422,
                         "validation",
                         fields={"marks": f"Use 0–{row['max_marks']}."})
@@ -992,7 +1095,8 @@ def download_submissions(assignment_id: int):
             path = upload_dir / Path(row["file_path"]).name
             if path.exists():
                 extension = Path(row["file_name"] or path.name).suffix or path.suffix
-                archive.write(path, f"{row['roll_no']}_{row['full_name'].replace(' ', '_')}{extension}")
+                stem = secure_filename(f"{row['roll_no']}_{row['full_name']}") or row["roll_no"]
+                archive.write(path, f"{stem}{extension.lower()}")
                 added += 1
     if not added:
         return json_err("No uploaded files are available for this assignment.",
@@ -1077,7 +1181,7 @@ def create_announcement():
     requested = []
     if cleaned["audience"] == "batches":
         try:
-            requested = [int(b) for b in cleaned["batch_ids"]]
+            requested = list(dict.fromkeys(int(b) for b in cleaned["batch_ids"]))
         except (TypeError, ValueError):
             fields["batch_ids"] = "Choose valid batches."
     else:
@@ -1092,23 +1196,24 @@ def create_announcement():
 
     db = get_db()
     timestamp = now()
-    announcement_id = db.insert("announcements", {
-        "professor_id": pid, "title": cleaned["title"], "body": cleaned["body"],
-        "priority": cleaned["priority"], "pinned": cleaned["pinned"],
-        "audience": "batches", "publish_at": cleaned["publish_at"],
-        "created_at": timestamp, "updated_at": timestamp, "deleted_at": None,
-    })
-    for batch_id in requested:
-        db.insert("announcement_targets", {
-            "announcement_id": announcement_id, "batch_id": batch_id,
+    with db.transaction():
+        announcement_id = db.insert("announcements", {
+            "professor_id": pid, "title": cleaned["title"], "body": cleaned["body"],
+            "priority": cleaned["priority"], "pinned": cleaned["pinned"],
+            "audience": cleaned["audience"], "publish_at": cleaned["publish_at"],
+            "created_at": timestamp, "updated_at": timestamp, "deleted_at": None,
         })
-    if cleaned["publish_at"] <= now():
-        for student in db.query(
-            f"""SELECT user_id FROM students WHERE batch_id IN
-                ({', '.join('?' * len(requested))})""", tuple(requested)
-        ):
-            notify(student["user_id"], "New announcement",
-                   f"{cleaned['title']}", "/#/announcements", "announcement")
+        for batch_id in requested:
+            db.insert("announcement_targets", {
+                "announcement_id": announcement_id, "batch_id": batch_id,
+            })
+        if cleaned["publish_at"] <= now():
+            for student in db.query(
+                f"""SELECT user_id FROM students WHERE batch_id IN
+                    ({', '.join('?' * len(requested))})""", tuple(requested)
+            ):
+                notify(student["user_id"], "New announcement",
+                       f"{cleaned['title']}", "/#/announcements", "announcement")
     audit("announcement_created", "announcement", announcement_id)
     return json_ok({"message": "Announcement posted.", "id": announcement_id},
                    status=201)
@@ -1127,14 +1232,23 @@ def update_announcement(announcement_id: int):
     data = body()
     fields, cleaned = _validate_announcement(data, partial=True)
     allowed_batches = _professor_batch_ids(pid)
-    requested = []
-    if cleaned["audience"] == "batches" and "batch_ids" in data:
+    requested = None
+    target_update = "audience" in data or "batch_ids" in data
+    next_audience = data.get("audience", announcement["audience"])
+    if next_audience == "batches" and "batch_ids" in data:
         try:
-            requested = [int(b) for b in cleaned["batch_ids"]]
+            requested = list(dict.fromkeys(int(b) for b in cleaned["batch_ids"]))
         except (TypeError, ValueError):
             fields["batch_ids"] = "Choose valid batches."
-    elif cleaned["audience"] == "all":
+    elif next_audience == "batches" and "audience" in data:
+        fields["batch_ids"] = "Choose at least one batch."
+        requested = []
+    elif next_audience == "all":
         requested = allowed_batches
+    elif "audience" in data:
+        fields["audience"] = "Choose an audience."
+    if target_update and requested == []:
+        fields["batch_ids"] = "Choose at least one batch."
     if requested and not set(requested).issubset(set(allowed_batches)):
         return json_err("You can only target batches you teach.", 403, "forbidden")
     if fields:
@@ -1145,16 +1259,19 @@ def update_announcement(announcement_id: int):
     for key in ("title", "body", "priority", "pinned"):
         if key in data:
             updates[key] = cleaned[key]
+    if "audience" in data:
+        updates["audience"] = next_audience
     if "publish_at" in data:
         updates["publish_at"] = cleaned["publish_at"]
-    db.update("announcements", updates, "id = ?", (announcement_id,))
-    if requested:
-        db.execute("DELETE FROM announcement_targets WHERE announcement_id = ?",
-                   (announcement_id,))
-        for batch_id in requested:
-            db.insert("announcement_targets", {
-                "announcement_id": announcement_id, "batch_id": batch_id,
-            })
+    with db.transaction():
+        db.update("announcements", updates, "id = ?", (announcement_id,))
+        if requested is not None:
+            db.execute("DELETE FROM announcement_targets WHERE announcement_id = ?",
+                       (announcement_id,))
+            for batch_id in requested:
+                db.insert("announcement_targets", {
+                    "announcement_id": announcement_id, "batch_id": batch_id,
+                })
     audit("announcement_updated", "announcement", announcement_id)
     return json_ok({"message": "Announcement updated."})
 

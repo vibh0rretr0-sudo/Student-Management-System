@@ -139,6 +139,12 @@ def _ensure_demo_pdf(upload_dir: Path) -> str:
 
 
 def seed(db: Database, upload_dir: str | Path) -> dict:
+    """Insert the demo dataset atomically."""
+    with db.transaction():
+        return _seed(db, upload_dir)
+
+
+def _seed(db: Database, upload_dir: str | Path) -> dict:
     """Insert the full demo dataset. Returns a few ids for convenience."""
     upload_dir = Path(upload_dir)
     demo_pdf = _ensure_demo_pdf(upload_dir)
@@ -225,14 +231,26 @@ def seed(db: Database, upload_dir: str | Path) -> dict:
             })
 
     # -- timetable ---------------------------------------------------------
-    subject_codes = [s["code"] for s in SUBJECTS]
     timetable_rows = []
+    # Keep every professor in at most one batch per period while ensuring
+    # each batch gets four different subjects each day.
+    timetable_patterns = [
+        [
+            ["MA101", "HS101", "CS101", "CS102"],
+            ["CS101", "CS102", "PH101", "EE101"],
+            ["PH101", "EE101", "MA101", "HS101"],
+        ],
+        [
+            ["PH101", "EE101", "MA101", "HS101"],
+            ["MA101", "HS101", "CS101", "CS102"],
+            ["CS101", "CS102", "PH101", "EE101"],
+        ],
+    ]
     for b_idx, (batch_code, batch_id) in enumerate(batch_ids.items()):
         for day in range(1, 7):  # Monday..Saturday
-            rotated = subject_codes[(day - 1 + b_idx) % len(subject_codes):] + \
-                      subject_codes[:(day - 1 + b_idx) % len(subject_codes)]
+            batch_slot_codes = timetable_patterns[(day - 1) // 3][b_idx]
             for slot_idx, (start, end) in enumerate(SLOTS):
-                code = rotated[slot_idx % len(rotated)]
+                code = batch_slot_codes[(slot_idx + day - 1) % len(SLOTS)]
                 room = ROOMS[(slot_idx + day + b_idx) % len(ROOMS)]
                 tid = db.insert("timetable", {
                     "batch_id": batch_id, "day_of_week": day,
@@ -322,6 +340,8 @@ def seed(db: Database, upload_dir: str | Path) -> dict:
     for assignment in assignment_rows:
         students = [s for s in student_rows if s["batch_id"] == assignment["batch_id"]]
         due_passed = assignment["due"] < now
+        if not due_passed:
+            continue
         for idx, student in enumerate(students):
             # Deterministic-ish spread: strong students submit more often.
             strong = student_bias[student["id"]] > 0.75

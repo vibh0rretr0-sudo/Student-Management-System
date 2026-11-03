@@ -16,7 +16,7 @@ if not exist .env (
   echo Created .env from .env.example
 )
 
-echo Preparing demo database...
+echo Seeding a demo database...
 .venv\Scripts\python.exe -m app.seed
 
 echo Starting portal at http://127.0.0.1:5000

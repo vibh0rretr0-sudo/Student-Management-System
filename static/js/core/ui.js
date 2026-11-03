@@ -130,7 +130,11 @@ export function openModal({
             button.disabled = true;
             try {
               const result = await action.onClick();
-              if (result === false) return;
+              if (result === false) {
+                button.classList.remove("is-loading");
+                button.disabled = false;
+                return;
+              }
             } catch (error) {
               button.classList.remove("is-loading");
               button.disabled = false;

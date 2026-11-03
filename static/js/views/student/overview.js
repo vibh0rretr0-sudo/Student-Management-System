@@ -73,8 +73,8 @@ export async function render(container) {
     el("div", { class: `att-stat ${overall.below_threshold ? "att-stat--danger" : "att-stat--success"}` },
       el("div", { class: "att-stat__value" },
         overall.below_threshold ? String(overall.need_attend) : String(overall.can_miss)),
-      el("div", { class: "att-stat__label" },
-        overall.below_threshold ? "Attend to reach 75%" : "Can still miss")));
+       el("div", { class: "att-stat__label" },
+         overall.below_threshold ? `Attend to reach ${threshold}%` : "Can still miss")));
 
   const warningText = overall.held === 0
     ? "No attendance has been recorded yet this semester."
@@ -238,7 +238,8 @@ export async function render(container) {
   const tips = panel({
     title: "Stay on track",
     body: el("div", { class: "stack-sm" },
-      el("p", { class: "small muted" }, "Keep every subject above 75% to stay exam-eligible."),
+       el("p", { class: "small muted" },
+         `Keep every subject above ${threshold}% to stay exam-eligible.`),
       el("div", { class: "progress" },
         el("div", {
           class: `progress__bar ${overall.below_threshold ? "progress__bar--danger" : "progress__bar--success"}`,

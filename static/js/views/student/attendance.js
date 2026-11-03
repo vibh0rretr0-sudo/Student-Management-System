@@ -144,8 +144,8 @@ export async function render(container, { params } = {}) {
         subtitle: `${threshold}% is the eligibility line`,
         body: el("div", { class: "chart-box" }, barCanvas),
         footer: el("div", { class: "chart-legend" },
-          el("span", {}, el("span", { class: "legend-dot", style: { background: "var(--success)" } }), "Above 75%"),
-          el("span", {}, el("span", { class: "legend-dot", style: { background: "var(--warning)" } }), "65–75%"),
+         el("span", {}, el("span", { class: "legend-dot", style: { background: "var(--success)" } }), `Above ${threshold}%`),
+         el("span", {}, el("span", { class: "legend-dot", style: { background: "var(--warning)" } }), `${threshold - 10}–${threshold}%`),
           el("span", {}, el("span", { class: "legend-dot", style: { background: "var(--danger)" } }), "Below 65%")),
       }),
       panel({
