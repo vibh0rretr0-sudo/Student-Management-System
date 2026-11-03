@@ -112,7 +112,7 @@ export function openModal({
     type: "button", class: "modal-close", "aria-label": "Close dialog",
     onclick: () => close(),
   }, iconEl("x"));
-  head.append(closeButton);
+  if (dismissible) head.append(closeButton);
 
   const bodyNode = el("div", { class: "modal__body" });
   if (body instanceof Node) bodyNode.append(body);
@@ -224,7 +224,11 @@ export function openDrawer({ title, subtitle, body, footer = [], onClose = null 
           button.disabled = true;
           try {
             const result = await action.onClick();
-            if (result === false) return;
+            if (result === false) {
+              button.classList.remove("is-loading");
+              button.disabled = false;
+              return;
+            }
           } catch (error) {
             button.classList.remove("is-loading");
             button.disabled = false;
@@ -323,15 +327,17 @@ export function formField({
 
   let input;
   if (type === "select") {
-    input = el("select", { class: "select", id, name });
+    input = el("select", { class: "select", id, name, disabled });
     (options || []).forEach((option) => {
       const item = typeof option === "string" ? { value: option, label: option } : option;
       input.append(el("option", { value: item.value }, item.label));
     });
     if (value !== "" && value !== null) input.value = String(value);
+    if (required) input.setAttribute("required", "");
   } else if (type === "textarea") {
-    input = el("textarea", { class: "textarea", id, name, rows, placeholder });
+    input = el("textarea", { class: "textarea", id, name, rows, placeholder, disabled });
     input.value = value;
+    if (required) input.setAttribute("required", "");
   } else {
     const inputProps = {
       class: "input", id, name, type, placeholder, value,
@@ -367,11 +373,23 @@ export function setFieldError(input, message) {
     input.setAttribute("aria-invalid", "true");
     if (error) {
       error.textContent = message;
-      if (error.id) input.setAttribute("aria-describedby", error.id);
+      if (error.id) {
+        const describedBy = new Set((input.getAttribute("aria-describedby") || "").split(/\s+/).filter(Boolean));
+        describedBy.add(error.id);
+        input.setAttribute("aria-describedby", [...describedBy].join(" "));
+      }
     }
   } else {
     input.removeAttribute("aria-invalid");
-    if (error) error.textContent = "";
+    if (error) {
+      error.textContent = "";
+      if (error.id) {
+        const describedBy = (input.getAttribute("aria-describedby") || "")
+          .split(/\s+/).filter((id) => id && id !== error.id);
+        if (describedBy.length) input.setAttribute("aria-describedby", describedBy.join(" "));
+        else input.removeAttribute("aria-describedby");
+      }
+    }
   }
 }
 

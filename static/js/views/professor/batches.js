@@ -1,10 +1,9 @@
 import { api } from "../../core/api.js";
 import {
-  el, errorPanel, iconEl, loadingView, openDrawer, toast, openModal, formField, busyButton,
+  busyButton, el, errorPanel, formField, goTo, iconEl, loadingView, openDrawer, openModal, toast,
 } from "../../core/ui.js";
 import { dataTable } from "../../components/table.js";
 import { pageHeader, panel } from "../../components/page.js";
-import { goTo } from "../../core/ui.js";
 import { getThreshold } from "../../runtime/session.js";
 
 export const title = "My Batches";

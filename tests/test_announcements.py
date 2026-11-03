@@ -128,6 +128,17 @@ def test_announcement_update_and_delete(app, db):
     assert edited["title"] == "Edited notice"
     assert edited["priority"] == "urgent"
 
+    audience_changed = professor.patch(
+        f"/api/professor/announcements/{created}",
+        json={"audience": "all"},
+        headers={"X-CSRF-Token": token},
+    )
+    assert audience_changed.status_code == 200
+    listing = professor.get("/api/professor/announcements").get_json()["data"]["items"]
+    edited = next(item for item in listing if item["id"] == created)
+    assert edited["audience"] == "all"
+    assert len(edited["batches"]) == 3
+
     deleted = professor.delete(f"/api/professor/announcements/{created}",
                                headers={"X-CSRF-Token": token})
     assert deleted.status_code == 200

@@ -42,7 +42,7 @@ export function countdownChip(classes) {
   return chip;
 }
 
-export function scheduleTimeline(classes, { role = "student", actionsFor = null } = {}) {
+export function scheduleTimeline(classes, { role = "student" } = {}) {
   if (!classes || !classes.length) {
     return el("div", { class: "state" },
       el("div", { class: "state__icon" }, iconEl("calendar")),

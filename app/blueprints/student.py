@@ -11,6 +11,7 @@ from ..utils import (
     attendance_stats,
     audit,
     body,
+    delete_upload_if_unreferenced,
     hhmm,
     iso,
     json_err,
@@ -22,7 +23,6 @@ from ..utils import (
     parse_date,
     parse_datetime,
     save_upload,
-    delete_upload_if_unreferenced,
     valid_email,
     valid_phone,
 )
@@ -532,7 +532,7 @@ def submit_assignment(assignment_id: int):
                         409, "already_graded")
 
     upload = request.files.get("file")
-    if not upload:
+    if not upload or not upload.filename:
         return json_err("Attach your submission file.", 422, "validation",
                         fields={"file": "Choose a file to upload."})
     try:

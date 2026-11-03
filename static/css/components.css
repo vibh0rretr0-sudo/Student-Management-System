@@ -200,7 +200,7 @@
 .field__error:empty { display: none; }
 
 .input-wrap { position: relative; display: flex; align-items: center; }
-.input-wrap > .input-icon {
+.input-wrap > .icon {
   position: absolute;
   left: 14px;
   color: var(--muted);
@@ -208,7 +208,7 @@
   height: 18px;
   pointer-events: none;
 }
-.input-wrap > .input-icon + .input { padding-left: 42px; }
+.input-wrap > .icon + .input { padding-left: 42px; }
 
 .input, .select, .textarea {
   width: 100%;
@@ -703,7 +703,7 @@
 
 .drawer {
   margin: 0 0 0 auto;
-  width: min(720px, 100vw - 40px);
+  width: min(720px, calc(100vw - 40px));
   height: 100vh;
 }
 .drawer__panel {

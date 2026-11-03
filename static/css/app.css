@@ -126,48 +126,6 @@
   border-radius: 0 4px 4px 0;
   background: var(--primary);
 }
-.nav__item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted-strong);
-  font-size: var(--text-sm);
-  font-weight: 550;
-  text-align: left;
-  text-decoration: none;
-  white-space: nowrap;
-  position: relative;
-  transition: background var(--dur-fast) var(--ease-out),
-              color var(--dur-fast) var(--ease-out);
-}
-.nav__item .icon { width: 19px; height: 19px; flex: none; }
-.nav__item:hover { background: var(--nav-hover); color: var(--text); }
-.nav__item[aria-current="page"] {
-  background: var(--nav-active);
-  color: var(--text);
-  font-weight: 650;
-  border-radius: 8px;
-}
-.nav__item[aria-current="page"]::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 8px; bottom: 8px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: var(--primary);
-}
-.nav__item[aria-current="page"]::before {
-  content: "";
-  position: absolute;
-  left: 0; top: 8px; bottom: 8px;
-  width: 4px;
-  border-radius: 0 4px 4px 0;
-  background: var(--primary);
-}
 .nav__label { flex: 1; }
 .nav__badge {
   font-size: 10px;

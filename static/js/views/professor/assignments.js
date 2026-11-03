@@ -2,7 +2,7 @@ import { api } from "../../core/api.js";
 import {
   busyButton, confirmDialog, el, errorPanel, fmtDateTime, formField,
   iconEl, loadingView, openDrawer, openModal, setFieldError, showFieldErrors,
-  statusBadge, toast, goTo,
+  statusBadge, toast,
 } from "../../core/ui.js";
 import { pageHeader, panel } from "../../components/page.js";
 import { dataTable } from "../../components/table.js";

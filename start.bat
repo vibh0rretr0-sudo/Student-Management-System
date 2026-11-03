@@ -7,6 +7,8 @@ if not exist .venv (
   python -m venv .venv
 )
 
+if "%PORT%"=="" set PORT=5000
+
 echo Installing dependencies...
 .venv\Scripts\python.exe -m pip install --quiet --upgrade pip
 .venv\Scripts\python.exe -m pip install --quiet -r requirements.txt
@@ -19,5 +21,5 @@ if not exist .env (
 echo Seeding a demo database...
 .venv\Scripts\python.exe -m app.seed
 
-echo Starting portal at http://127.0.0.1:5000
+echo Starting portal at http://127.0.0.1:%PORT%
 .venv\Scripts\python.exe run.py

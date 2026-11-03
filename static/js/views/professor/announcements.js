@@ -1,7 +1,7 @@
 import { api } from "../../core/api.js";
 import {
   busyButton, confirmDialog, el, errorPanel, fmtDateTime, formField,
-  iconEl, loadingView, openModal, setFieldError, showFieldErrors, statusBadge,
+  iconEl, loadingView, openModal, showFieldErrors, statusBadge,
   toast,
 } from "../../core/ui.js";
 import { pageHeader } from "../../components/page.js";

@@ -1,5 +1,6 @@
 import io
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from helpers import auth_headers, professor_login, student_login
 
@@ -126,6 +127,13 @@ def test_professor_grades_and_student_sees_marks(app, db):
     )
     assert too_high.status_code == 422
 
+    # Non-finite JSON numbers must not be persisted as marks.
+    not_a_number = professor.post(
+        f"/api/professor/submissions/{row['submission_id']}/grade",
+        json={"marks": "NaN"}, headers={"X-CSRF-Token": professor_token},
+    )
+    assert not_a_number.status_code == 422
+
 
 def test_extend_remind_and_zip_download(app, db):
     professor, assignment_id, token = _create_assignment(app, db)
@@ -156,6 +164,42 @@ def test_extend_remind_and_zip_download(app, db):
     assert archive.status_code == 200
     assert archive.mimetype == "application/zip"
     assert len(archive.data) > 100
+
+
+def test_resubmission_removes_only_the_replaced_upload(app, db):
+    _, assignment_id, _ = _create_assignment(app, db)
+    student = app.test_client()
+    student_login(student)
+    token = auth_headers(student)["X-CSRF-Token"]
+
+    first_response = student.post(
+        f"/api/student/assignments/{assignment_id}/submit",
+        data={"file": (io.BytesIO(b"%PDF-1.4 first"), "first.pdf")},
+        headers={"X-CSRF-Token": token},
+        content_type="multipart/form-data",
+    )
+    assert first_response.status_code == 201
+    first = db.query_one(
+        "SELECT id, file_path FROM submissions WHERE assignment_id = ?",
+        (assignment_id,),
+    )
+    first_path = Path(app.config["UPLOAD_DIR"]) / first["file_path"]
+
+    response = student.post(
+        f"/api/student/assignments/{assignment_id}/submit",
+        data={"file": (io.BytesIO(b"%PDF-1.4 second"), "second.pdf")},
+        headers={"X-CSRF-Token": token},
+        content_type="multipart/form-data",
+    )
+
+    assert response.status_code == 201
+    second = db.query_one(
+        "SELECT id, file_path FROM submissions WHERE assignment_id = ?",
+        (assignment_id,),
+    )
+    assert second["id"] == first["id"]
+    assert second["file_path"] != first["file_path"]
+    assert not first_path.exists()
 
 
 def test_delete_and_restore_assignment(app, db):

@@ -11,12 +11,17 @@ def get_csrf(client) -> str:
 
 
 def login(client, identifier: str, role: str = "student",
-          password: str = DEMO_PASSWORD, remember: bool = False):
+          password: str = DEMO_PASSWORD,
+          remember: bool = False):
     token = get_csrf(client)
     return client.post(
         "/api/auth/login",
-        json={"role": role, "identifier": identifier, "password": password,
-              "remember": remember},
+        json={
+            "role": role,
+            "identifier": identifier,
+            "password": password,
+            "remember": remember,
+        },
         headers={"X-CSRF-Token": token},
     )
 

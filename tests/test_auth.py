@@ -1,11 +1,9 @@
 from datetime import datetime
 
-import pytest
-
 from helpers import get_csrf, login, professor_login, student_login
 
 
-def test_student_login_sets_secure_session_cookie(client):
+def test_student_login_sets_session_cookie_attributes(client):
     response = student_login(client)
     payload = response.get_json()
     assert payload["ok"] is True
@@ -131,6 +129,23 @@ def test_session_expiry_enforced(app, client):
     response = client.get("/api/student/overview")
     assert response.status_code == 401
     assert token
+
+
+def test_session_reports_runtime_security_configuration(app, client):
+    app.config.update(
+        ATTENDANCE_THRESHOLD=82,
+        SESSION_IDLE_MINUTES=45,
+        SESSION_WARN_MINUTES=35,
+    )
+    student_login(client)
+
+    response = client.get("/api/auth/session")
+
+    assert response.status_code == 200
+    data = response.get_json()["data"]
+    assert data["threshold"] == 82
+    assert data["idle_minutes"] == 45
+    assert data["warn_minutes"] == 35
 
 
 def test_campus_images_listed_and_cached(client):

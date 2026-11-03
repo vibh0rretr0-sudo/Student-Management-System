@@ -44,8 +44,20 @@ export function loadChartJs() {
     const script = document.createElement("script");
     script.src = "/static/vendor/chart.umd.js";
     script.async = true;
-    script.onload = () => resolve(window.Chart);
-    script.onerror = () => reject(new Error("Chart library failed to load."));
+    script.onload = () => {
+      if (window.Chart) {
+        resolve(window.Chart);
+        return;
+      }
+      libraryPromise = null;
+      script.remove();
+      reject(new Error("Chart library failed to load."));
+    };
+    script.onerror = () => {
+      libraryPromise = null;
+      script.remove();
+      reject(new Error("Chart library failed to load."));
+    };
     document.head.append(script);
   });
   return libraryPromise;
@@ -59,7 +71,7 @@ function baseOptions(chartColors) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: colors().surface,
+        backgroundColor: chartColors.surface,
         titleColor: chartColors.text,
         bodyColor: chartColors.text,
         borderColor: chartColors.border,
@@ -103,11 +115,15 @@ function miniDoughnut(chart, palette) {
   const color = statusColor(value, chart.$threshold);
   chart.data.datasets[0].backgroundColor = [color, palette.border];
   chart.data.datasets[0].borderColor = palette.surface;
+  themeScales(chart, palette);
 }
 
 export async function doughnutChart(canvas, { value, threshold = 75, cutout = "76%" }) {
+  if (!canvas || !canvas.isConnected) return null;
   const Chart = await loadChartJs();
+  if (!canvas.isConnected) return null;
   const palette = colors();
+  const base = baseOptions(palette);
   const safe = Math.max(0, Math.min(100, Number(value) || 0));
   const color = statusColor(safe, threshold);
   const chart = new Chart(canvas, {
@@ -123,14 +139,14 @@ export async function doughnutChart(canvas, { value, threshold = 75, cutout = "7
       }],
     },
     options: {
-      ...baseOptions(palette),
+      ...base,
       cutout,
       rotation: -90,
       circumference: 360,
       plugins: {
-        ...baseOptions(palette).plugins,
+        ...base.plugins,
         tooltip: {
-          ...baseOptions(palette).plugins.tooltip,
+          ...base.plugins.tooltip,
           callbacks: {
             label: (context) => `${context.label}: ${context.raw}%`,
           },
@@ -143,9 +159,12 @@ export async function doughnutChart(canvas, { value, threshold = 75, cutout = "7
   return register(chart, miniDoughnut);
 }
 
-export async function lineChart(canvas, { labels, values, label = "Attendance", threshold = null }) {
+export async function lineChart(canvas, { labels, values, label = "Attendance" }) {
+  if (!canvas || !canvas.isConnected) return null;
   const Chart = await loadChartJs();
+  if (!canvas.isConnected) return null;
   const palette = colors();
+  const base = baseOptions(palette);
   const context = canvas.getContext("2d");
   const gradient = context.createLinearGradient(0, 0, 0, canvas.height || 220);
   gradient.addColorStop(0, `${hexToRgba(palette.primary, 0.25)}`);
@@ -172,7 +191,7 @@ export async function lineChart(canvas, { labels, values, label = "Attendance", 
       }],
     },
     options: {
-      ...baseOptions(palette),
+      ...base,
       scales: {
         x: {
           grid: { display: false, drawBorder: false },
@@ -194,9 +213,9 @@ export async function lineChart(canvas, { labels, values, label = "Attendance", 
         },
       },
       plugins: {
-        ...baseOptions(palette).plugins,
+        ...base.plugins,
         tooltip: {
-          ...baseOptions(palette).plugins.tooltip,
+          ...base.plugins.tooltip,
           callbacks: {
             label: (context) => context.raw === null
               ? "No classes"
@@ -238,8 +257,11 @@ function themeScales(chart, palette) {
 }
 
 export async function barChart(canvas, { labels, values, threshold = 75 }) {
+  if (!canvas || !canvas.isConnected) return null;
   const Chart = await loadChartJs();
+  if (!canvas.isConnected) return null;
   const palette = colors();
+  const base = baseOptions(palette);
   const chartColors = values.map((value) => statusColor(value, threshold));
   const chart = new Chart(canvas, {
     type: "bar",
@@ -254,7 +276,7 @@ export async function barChart(canvas, { labels, values, threshold = 75 }) {
       }],
     },
     options: {
-      ...baseOptions(palette),
+      ...base,
       scales: {
         x: {
           grid: { display: false, drawBorder: false },
@@ -272,9 +294,9 @@ export async function barChart(canvas, { labels, values, threshold = 75 }) {
         },
       },
       plugins: {
-        ...baseOptions(palette).plugins,
+        ...base.plugins,
         tooltip: {
-          ...baseOptions(palette).plugins.tooltip,
+          ...base.plugins.tooltip,
           callbacks: { label: (context) => `${context.parsed.y}% attended` },
         },
       },
@@ -288,8 +310,11 @@ export async function barChart(canvas, { labels, values, threshold = 75 }) {
 }
 
 export async function stackedBarChart(canvas, { labels, present, late, absent }) {
+  if (!canvas || !canvas.isConnected) return null;
   const Chart = await loadChartJs();
+  if (!canvas.isConnected) return null;
   const palette = colors();
+  const base = baseOptions(palette);
   const chart = new Chart(canvas, {
     type: "bar",
     data: {
@@ -301,7 +326,7 @@ export async function stackedBarChart(canvas, { labels, present, late, absent })
       ],
     },
     options: {
-      ...baseOptions(palette),
+      ...base,
       scales: {
         x: {
           stacked: true, grid: { display: false, drawBorder: false },
@@ -316,7 +341,7 @@ export async function stackedBarChart(canvas, { labels, present, late, absent })
         },
       },
       plugins: {
-        ...baseOptions(palette).plugins,
+        ...base.plugins,
         legend: {
           display: true,
           position: "bottom",

@@ -136,6 +136,7 @@ kbd {
 .cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3); }
 .spread { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); }
 .muted { color: var(--muted); }
+.muted-strong { color: var(--muted-strong); }
 .small { font-size: var(--text-sm); }
 .tiny { font-size: var(--text-xs); }
 .strong { font-weight: 650; color: var(--text-strong); }

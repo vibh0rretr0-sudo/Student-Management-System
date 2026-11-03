@@ -1,7 +1,7 @@
 """Authentication: CSRF bootstrap, login, logout, session, heartbeat."""
 from __future__ import annotations
 
-from flask import Blueprint, current_app, g, request
+from flask import Blueprint, current_app, g
 
 from ..db import get_db
 from ..security import (

@@ -1,6 +1,6 @@
-"""Live API smoke test: log in as student + professor and hit every endpoint.
+"""Live API smoke test: log in as student + professor and hit key endpoints.
 
-Runs against the live server (default http://127.0.0.1:5017). Verifies each
+Runs against the live server (default http://127.0.0.1:5000). Verifies each
 reachable endpoint returns HTTP < 500 and, for JSON endpoints, ok:true.
 Endpoints that legitimately 4xx for role/ownership reasons are noted, not failed.
 """
@@ -12,7 +12,7 @@ import urllib.request
 import urllib.error
 import http.cookiejar
 
-BASE = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:5017"
+BASE = (sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:5000").rstrip("/")
 DEMO_PASSWORD = "Jecrc@2026"
 
 

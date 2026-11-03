@@ -7,7 +7,6 @@ from flask import Blueprint, current_app, jsonify, make_response, redirect, rend
 
 from ..security import (
     ensure_anonymous_session,
-    is_mobile_user_agent,
     load_profile,
     set_session_cookie,
 )

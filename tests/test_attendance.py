@@ -35,7 +35,8 @@ def test_student_attendance_endpoint_matches_database(app, client, db):
     student_login(client)
     row = db.query_one(
         """SELECT COUNT(*) AS held,
-                  SUM(CASE WHEN status IN ('present','late') THEN 1 ELSE 0 END) AS attended
+                   SUM(CASE WHEN status IN ('present', 'late')
+                            THEN 1 ELSE 0 END) AS attended
            FROM attendance a JOIN students s ON s.id = a.student_id
            WHERE s.roll_no = '26CSAI001'"""
     )
@@ -134,6 +135,22 @@ def test_cannot_mark_future_attendance(app, db):
         "records": [{"student_id": 1, "status": "present"}],
     }, headers=auth_headers(client))
     assert response.status_code == 422
+
+
+def test_attendance_rejects_malformed_student_row(app, db):
+    client = app.test_client()
+    professor_login(client)
+    batch = db.query_one("SELECT id FROM batches WHERE code = 'CSAI-A'")
+    subject = db.query_one("SELECT id FROM subjects WHERE code = 'CS101'")
+    response = client.post("/api/professor/attendance", json={
+        "batch_id": batch["id"],
+        "subject_id": subject["id"],
+        "date": date.today().isoformat(),
+        "records": [None],
+    }, headers=auth_headers(client))
+
+    assert response.status_code == 422
+    assert response.get_json()["error"]["code"] == "validation"
 
 
 def test_attendance_rejects_foreign_student(app, db):

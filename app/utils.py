@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import re
-import secrets
 import uuid
 from datetime import date, datetime, timedelta
 from pathlib import Path
@@ -104,8 +103,11 @@ def valid_email(value) -> bool:
 
 def valid_phone(value) -> bool:
     text = str(value).strip() if value else ""
-    return bool(text) and bool(PHONE_RE.fullmatch(text)) \
+    return (
+        bool(text)
+        and bool(PHONE_RE.fullmatch(text))
         and 7 <= sum(char.isdigit() for char in text) <= 15
+    )
 
 
 def paginate(default_per: int = 20, max_per: int = 100):

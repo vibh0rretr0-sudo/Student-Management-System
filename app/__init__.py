@@ -6,7 +6,7 @@ import secrets
 from pathlib import Path
 
 import click
-from flask import Flask, g, redirect, render_template, request
+from flask import Flask, g, render_template, request
 
 from config import BASE_DIR, Config
 
@@ -102,8 +102,9 @@ def create_app(test_config: dict | None = None) -> Flask:
             response.headers.setdefault("Cache-Control", "no-store")
         if request.path.startswith("/static/"):
             if app.config.get("ENV_NAME") == "production":
-                response.headers.setdefault("Cache-Control",
-                                            "public, max-age=86400")
+                response.headers.setdefault(
+                    "Cache-Control", "public, max-age=86400"
+                )
             else:
                 # Development: always revalidate so edits show up immediately.
                 response.headers["Cache-Control"] = "no-store"

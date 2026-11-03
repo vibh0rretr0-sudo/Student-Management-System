@@ -1,5 +1,5 @@
 import { disposeCharts } from "../core/charts.js";
-import { el, errorPanel, currentHashRoute } from "../core/ui.js";
+import { errorPanel, currentHashRoute } from "../core/ui.js";
 
 export function createRouter({ routes, container, onRouteChange, defaultRoute = "overview" }) {
   let started = false;

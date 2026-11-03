@@ -465,7 +465,7 @@ export function buildShell(boot, navItems) {
               lastActivity = Date.now();
               warningOpen = false;
               window.clearInterval(timer);
-               toast(`Session extended for another ${idleMinutes} minutes.`, "success");
+              toast(`Session extended for another ${idleMinutes} minutes.`, "success");
             } catch (error) {
               toast("We couldn't extend your session. Please sign in again.", "error");
               return false;

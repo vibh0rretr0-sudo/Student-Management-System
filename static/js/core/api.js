@@ -129,12 +129,12 @@ export function upload(path, formData, { onProgress, method = "POST" } = {}) {
         }));
         return;
       }
-      if (request.status >= 200 && request.status < 300 && json.ok) {
+      if (request.status >= 200 && request.status < 300 && json && json.ok === true) {
         resolve(json);
         return;
       }
       if (request.status === 401) handleUnauthorized(path);
-      const error = json.error || {};
+      const error = json && json.error ? json.error : {};
       reject(new ApiError(error.message || "Upload failed. Please try again.", {
         status: request.status,
         code: error.code || null,
@@ -154,6 +154,7 @@ export function upload(path, formData, { onProgress, method = "POST" } = {}) {
 export async function downloadBlob(path, filename) {
   const response = await fetch(path, { credentials: "same-origin" });
   if (!response.ok) {
+    if (response.status === 401) handleUnauthorized(path);
     let message = "Download failed.";
     try {
       const json = await response.json();

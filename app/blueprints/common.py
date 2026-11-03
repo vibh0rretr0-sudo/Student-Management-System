@@ -1,7 +1,6 @@
 """Shared endpoints: profile, notifications, command-palette search, files."""
 from __future__ import annotations
 
-import time
 from pathlib import Path
 
 from flask import Blueprint, current_app, g, request, send_file
@@ -174,7 +173,7 @@ def update_contact():
 @api_login_required
 def update_photo():
     file = request.files.get("photo")
-    if not file:
+    if not file or not file.filename:
         return json_err("Choose an image to upload.", 422, "validation",
                         fields={"photo": "Choose an image."})
     try:

@@ -28,7 +28,7 @@ CREATE TABLE users (
   username      TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
   role          TEXT NOT NULL CHECK (role IN ('student','professor')),
-  is_active     INTEGER NOT NULL DEFAULT 1,
+  is_active     INTEGER NOT NULL DEFAULT 1 CHECK (is_active IN (0, 1)),
   created_at    TEXT NOT NULL,
   updated_at    TEXT NOT NULL
 );
@@ -130,7 +130,6 @@ CREATE TABLE attendance (
   created_at TEXT NOT NULL,
   UNIQUE (student_id, subject_id, date)
 );
-CREATE INDEX idx_attendance_student_subject_date ON attendance(student_id, subject_id, date);
 CREATE INDEX idx_attendance_batch_date ON attendance(batch_id, date);
 CREATE INDEX idx_attendance_subject_date ON attendance(subject_id, date);
 CREATE INDEX idx_attendance_marked_by ON attendance(marked_by);
@@ -180,7 +179,7 @@ CREATE TABLE announcements (
   title        TEXT NOT NULL,
   body         TEXT NOT NULL,
   priority     TEXT NOT NULL DEFAULT 'normal' CHECK (priority IN ('normal','important','urgent')),
-  pinned       INTEGER NOT NULL DEFAULT 0,
+  pinned       INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),
   audience     TEXT NOT NULL DEFAULT 'batches' CHECK (audience IN ('batches','all')),
   publish_at   TEXT NOT NULL,
   created_at   TEXT NOT NULL,
@@ -214,7 +213,7 @@ CREATE TABLE notifications (
   body       TEXT NOT NULL,
   link       TEXT,
   kind       TEXT NOT NULL DEFAULT 'info',
-  is_read    INTEGER NOT NULL DEFAULT 0,
+  is_read    INTEGER NOT NULL DEFAULT 0 CHECK (is_read IN (0, 1)),
   created_at TEXT NOT NULL
 );
 CREATE INDEX idx_notifications_user ON notifications(user_id, is_read);
@@ -236,7 +235,7 @@ CREATE TABLE sessions (
   token      TEXT PRIMARY KEY,
   user_id    INTEGER REFERENCES users(id) ON DELETE CASCADE,
   csrf_token TEXT NOT NULL,
-  remember   INTEGER NOT NULL DEFAULT 0,
+  remember   INTEGER NOT NULL DEFAULT 0 CHECK (remember IN (0, 1)),
   ip         TEXT,
   user_agent TEXT,
   created_at TEXT NOT NULL,
@@ -250,7 +249,7 @@ CREATE TABLE login_attempts (
   id           INTEGER PRIMARY KEY AUTOINCREMENT,
   identifier   TEXT NOT NULL,
   ip           TEXT NOT NULL,
-  success      INTEGER NOT NULL DEFAULT 0,
+  success      INTEGER NOT NULL DEFAULT 0 CHECK (success IN (0, 1)),
   attempted_at TEXT NOT NULL
 );
 CREATE INDEX idx_attempts_identifier ON login_attempts(identifier, attempted_at);

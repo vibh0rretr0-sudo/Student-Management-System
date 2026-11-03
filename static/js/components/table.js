@@ -1,5 +1,5 @@
 /* Sortable, sticky-header data table. */
-import { clear, el, iconEl } from "../core/ui.js";
+import { clear, el } from "../core/ui.js";
 
 function sortValue(row, column) {
   if (typeof column.sortValue === "function") return column.sortValue(row);
